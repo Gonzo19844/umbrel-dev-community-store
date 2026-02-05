@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-axelive
 category: bitcoin
 name: AxeLive (Dev)
-version: "1.2-dev.1"
+version: "1.2-dev.2"
 tagline: Real-time miner monitoring and thermal control
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axelive/icon.png
 description: >-
@@ -21,5 +21,5 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 releaseNotes: >-
-  Dev-store entry tracking the current AxeLive release image.
+  Removes Patreon sign-in/banners/limits; keeps licensing telemetry ping.
 submitter: WillItMod

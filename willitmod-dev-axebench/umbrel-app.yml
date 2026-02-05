@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-axebench
 category: bitcoin
 name: AxeBench (Dev)
-version: "3.0.2-dev.2"
+version: "3.0.2-dev.3"
 tagline: Bitaxe fleet benchmarking and management
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axebench/icon.png
 description: >-
@@ -29,5 +29,5 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 releaseNotes: >-
-  Updated release image tag to v3.0.2-r2.
+  Removes Patreon sign-in/banners/limits; keeps licensing telemetry ping; pool username deploys as wallet.worker.
 submitter: WillItMod
