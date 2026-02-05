@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-axebench
 category: bitcoin
 name: AxeBench (Dev)
-version: "3.0.9"
+version: "3.0.10"
 tagline: Bitaxe fleet benchmarking and management
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axebench/icon.png
 description: >-
@@ -29,5 +29,5 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 releaseNotes: >-
-  v3.0.9: Avalon Q now pulls live metrics (temps/power/fan/errors) from the web dashboard when a password is set; dashboard shows VR Temp for Avalon Q (not TarT).
+  v3.0.10: Avalon Q status parsing improved (temps/VR temps/fan no longer stuck at 0 due to firmware field differences); avoids showing LOW mode when unknown; hides 0% fan when not provided.
 submitter: WillItMod
