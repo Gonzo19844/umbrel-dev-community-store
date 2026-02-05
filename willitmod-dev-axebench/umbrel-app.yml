@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-axebench
 category: bitcoin
 name: AxeBench (Dev)
-version: "3.0.3-dev.3"
+version: "3.0.3-dev.4"
 tagline: Bitaxe fleet benchmarking and management
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axebench/icon.png
 description: >-
@@ -29,5 +29,5 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 releaseNotes: >-
-  v3.0.3-dev.3: Same as dev.1 + fixes GHCR container build.
+  v3.0.3-dev.4: Same as dev.1 + fixes GHCR container build.
 submitter: WillItMod
