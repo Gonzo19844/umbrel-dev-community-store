@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-axebench
 category: bitcoin
 name: AxeBench (Dev)
-version: "3.0.5-dev.2"
+version: "3.0.6"
 tagline: Bitaxe fleet benchmarking and management
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axebench/icon.png
 description: >-
@@ -29,5 +29,5 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 releaseNotes: >-
-  v3.0.5-dev.2: Fix Avalon Q auto-detection (no longer misidentified as Nano3s); remove configurable watts prompt for Avalon Q.
+  v3.0.6: Fix Avalon Q auto-detection (no longer misidentified as Nano3s); remove configurable watts prompt for Avalon Q; avoid misleading chip count.
 submitter: WillItMod
