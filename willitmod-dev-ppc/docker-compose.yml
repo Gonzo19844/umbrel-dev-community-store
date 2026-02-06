@@ -89,7 +89,7 @@ services:
 
         needs_ckpool_regen=0
         if [ -f /data/pool/config/ckpool.conf ]; then
-          if ! grep -qE '"btcd"[[:space:]]*:[[:space:]]*\[' /data/pool/config/ckpool.conf; then
+          if ! grep -qE '"btcd"[[:space:]]*:[[:space:]]*\\[' /data/pool/config/ckpool.conf; then
             needs_ckpool_regen=1
           fi
           if ! grep -q '"zmqblock"' /data/pool/config/ckpool.conf; then
@@ -100,7 +100,7 @@ services:
         fi
 
         if [ "$$needs_ckpool_regen" -eq 1 ]; then
-          existing_addr="$$(grep -oE '\"btcaddress\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' /data/pool/config/ckpool.conf 2>/dev/null | head -n 1 | sed -E 's/.*\"btcaddress\"[[:space:]]*:[[:space:]]*\"([^\"]*)\".*/\1/' || true)"
+          existing_addr="$$(grep -oE '\\\"btcaddress\\\"[[:space:]]*:[[:space:]]*\\\"[^\\\"]*\\\"' /data/pool/config/ckpool.conf 2>/dev/null | head -n 1 | sed -E 's/.*\\\"btcaddress\\\"[[:space:]]*:[[:space:]]*\\\"([^\\\"]*)\\\".*/\\1/' || true)"
           if [ -f /data/pool/config/ckpool.conf ]; then
             mv /data/pool/config/ckpool.conf "/data/pool/config/ckpool.conf.bak.invalid.$$(date +%s 2>/dev/null || echo 0)" || true
           fi
@@ -135,7 +135,7 @@ services:
           fi
         fi
 
-        # cryptocurrency-pool-server (NOMP) config
+        # cryptocurrency-pool-server config
         if [ ! -f /data/pool/cps/config.json ]; then
           envsubst < "$$tpl_dir/cps-config.json.template" > /data/pool/cps/config.json
           chown -R 1000:1000 /data/pool/cps || true
@@ -150,8 +150,7 @@ services:
         fi
 
   ppcd:
-    build:
-      context: ${APP_DATA_DIR}/data/peercoind
+    image: ghcr.io/willitmod/peercoin-core:0.15.1ppc
     user: "1000:1000"
     restart: unless-stopped
     depends_on:
@@ -161,8 +160,7 @@ services:
       - ${APP_DATA_DIR}/data/node:/data
 
   wallet_init:
-    build:
-      context: ${APP_DATA_DIR}/data/peercoind
+    image: ghcr.io/willitmod/peercoin-core:0.15.1ppc
     user: "1000:1000"
     restart: "no"
     environment:
@@ -195,9 +193,9 @@ services:
         exit 1
       fi
 
-      wallets="$$( $$cli listwallets | tr -d ' \n\r\t' || true )"
+      wallets="$$( $$cli listwallets | tr -d ' \\n\\r\\t' || true )"
       if [ "$$wallets" = "[]" ]; then
-        existing="$$( $$cli listwalletdir | grep -oE '\"name\"[[:space:]]*:[[:space:]]*\"[^\"]+\"' | head -n 1 | sed -E 's/.*\"name\"[[:space:]]*:[[:space:]]*\"([^\"]+)\".*/\1/' || true )"
+        existing="$$( $$cli listwalletdir | grep -oE '\\\"name\\\"[[:space:]]*:[[:space:]]*\\\"[^\\\"]+\\\"' | head -n 1 | sed -E 's/.*\\\"name\\\"[[:space:]]*:[[:space:]]*\\\"([^\\\"]+)\\\".*/\\1/' || true )"
         if [ -n "$$existing" ]; then
           echo "[axeppc] Loading wallet: $$existing" >&2
           $$cli loadwallet "$$existing" true >/dev/null
@@ -212,7 +210,7 @@ services:
     restart: unless-stopped
 
   pool:
-    image: ghcr.io/willitmod/axeppc-pool:0.2.6
+    image: ghcr.io/willitmod/axeppc-pool:0.2.14
     user: "1000:1000"
     restart: unless-stopped
     depends_on:
@@ -231,9 +229,9 @@ services:
       - ${APP_DATA_DIR}/data/pool/cps/coins/peercoin.json:/app/coins/peercoin.json:ro
 
   app:
-    image: ghcr.io/willitmod/axeppc-app-umbrel-dev:0.2.13
+    image: ghcr.io/willitmod/axeppc-app-umbrel-dev:0.2.14
     user: "1000:1000"
-    restart: on-failure
+    restart: unless-stopped
     stop_grace_period: 30s
     networks:
       default:
@@ -255,7 +253,7 @@ services:
       PPC_RPC_USER: "ppc"
       PPC_RPC_PASS: "${APP_PASSWORD}"
       POOL_BACKEND: "cps"
-      POOL_IMAGE: "ghcr.io/willitmod/axeppc-pool:0.2.6"
+      POOL_IMAGE: "ghcr.io/willitmod/axeppc-pool:0.2.14"
       POOL_STATS_URL: "http://pool:8080/api/stats"
       POOL_STRATUM_HOST: "pool"
       POOL_STRATUM_PORT: "3333"
