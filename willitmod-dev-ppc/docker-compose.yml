@@ -50,11 +50,26 @@ services:
 
         mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users /data/pool/cps/pool_configs /data/pool/cps/coins /data/templates
 
-        if [ ! -f "$$tpl_dir/peercoin.conf.template" ] || [ ! -f "$$tpl_dir/ckpool.conf.template" ] || [ ! -f "$$tpl_dir/cps-config.json.template" ] || [ ! -f "$$tpl_dir/cps-peercoin.json.template" ] || [ ! -f "$$tpl_dir/cps-coin-peercoin.json.template" ]; then
-          echo "Template files not found in $$tpl_dir. (Expected peercoin.conf.template, ckpool.conf.template, cps-config.json.template, cps-peercoin.json.template, cps-coin-peercoin.json.template)"
+        # NOTE: `/data/templates` is a persistent volume. Existing installs may not automatically
+        # receive new template files on app updates, so we must not hard-fail on newly added files.
+        if [ ! -f "$$tpl_dir/peercoin.conf.template" ] || [ ! -f "$$tpl_dir/ckpool.conf.template" ] || [ ! -f "$$tpl_dir/cps-config.json.template" ] || [ ! -f "$$tpl_dir/cps-peercoin.json.template" ]; then
+          echo "Template files not found in $$tpl_dir. (Expected peercoin.conf.template, ckpool.conf.template, cps-config.json.template, cps-peercoin.json.template)"
           echo "Contents of $$tpl_dir:"
           ls -la "$$tpl_dir" || true
           exit 1
+        fi
+
+        if [ ! -f "$$tpl_dir/cps-coin-peercoin.json.template" ]; then
+          cat > "$$tpl_dir/cps-coin-peercoin.json.template" <<'EOF'
+        {
+          "name": "Peercoin",
+          "symbol": "PPC",
+          "algorithm": "sha256",
+          "reward": "POW",
+          "version_mask": "1fffe000"
+        }
+        EOF
+          chown 1000:1000 "$$tpl_dir/cps-coin-peercoin.json.template" 2>/dev/null || true
         fi
 
         if [ ! -f /data/node/peercoin.conf ]; then
