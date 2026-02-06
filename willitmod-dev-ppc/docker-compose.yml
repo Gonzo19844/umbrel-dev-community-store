@@ -167,6 +167,9 @@ services:
     restart: on-failure
     environment:
       HOME: "/data"
+    entrypoint:
+      - /bin/sh
+      - -ec
     depends_on:
       ppcd:
         condition: service_started
@@ -174,38 +177,35 @@ services:
         condition: service_completed_successfully
     volumes:
       - ${APP_DATA_DIR}/data/node:/data
-    command:
-      - /bin/sh
-      - -ec
-      - |-
-        set -eu
+    command: |-
+      set -eu
 
-        cli="peercoin-cli -conf=/data/peercoin.conf -datadir=/data -rpcconnect=ppcd"
+      cli="peercoin-cli -conf=/data/peercoin.conf -datadir=/data -rpcconnect=ppcd"
 
-        # Wait up to ~3 minutes for RPC to be ready
-        for i in $$(seq 1 180); do
-          if $$cli getblockchaininfo >/dev/null 2>&1; then
-            break
-          fi
-          sleep 1
-        done
-
-        if ! $$cli getblockchaininfo >/dev/null 2>&1; then
-          echo "[axeppc] RPC not ready after timeout" >&2
-          exit 1
+      # Wait up to ~3 minutes for RPC to be ready
+      for i in $$(seq 1 180); do
+        if $$cli getblockchaininfo >/dev/null 2>&1; then
+          break
         fi
+        sleep 1
+      done
 
-        wallets="$$( $$cli listwallets | tr -d ' \n\r\t' || true )"
-        if [ "$$wallets" = "[]" ]; then
-          existing="$$( $$cli listwalletdir | grep -oE '\"name\"[[:space:]]*:[[:space:]]*\"[^\"]+\"' | head -n 1 | sed -E 's/.*\"name\"[[:space:]]*:[[:space:]]*\"([^\"]+)\".*/\1/' || true )"
-          if [ -n "$$existing" ]; then
-            echo "[axeppc] Loading wallet: $$existing" >&2
-            $$cli loadwallet "$$existing" true >/dev/null
-          else
-            echo "[axeppc] Creating wallet: axeppc_wallet" >&2
-            $$cli -named createwallet wallet_name=axeppc_wallet load_on_startup=true >/dev/null
-          fi
+      if ! $$cli getblockchaininfo >/dev/null 2>&1; then
+        echo "[axeppc] RPC not ready after timeout" >&2
+        exit 1
+      fi
+
+      wallets="$$( $$cli listwallets | tr -d ' \n\r\t' || true )"
+      if [ "$$wallets" = "[]" ]; then
+        existing="$$( $$cli listwalletdir | grep -oE '\"name\"[[:space:]]*:[[:space:]]*\"[^\"]+\"' | head -n 1 | sed -E 's/.*\"name\"[[:space:]]*:[[:space:]]*\"([^\"]+)\".*/\1/' || true )"
+        if [ -n "$$existing" ]; then
+          echo "[axeppc] Loading wallet: $$existing" >&2
+          $$cli loadwallet "$$existing" true >/dev/null
+        else
+          echo "[axeppc] Creating wallet: axeppc_wallet" >&2
+          $$cli -named createwallet wallet_name=axeppc_wallet load_on_startup=true >/dev/null
         fi
+      fi
 
   redis:
     image: redis:7-alpine
