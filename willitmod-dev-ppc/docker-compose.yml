@@ -144,6 +144,17 @@ services:
           envsubst < "$$tpl_dir/cps-peercoin.json.template" > /data/pool/cps/pool_configs/peercoin.json
           chown -R 1000:1000 /data/pool/cps || true
         fi
+        # Self-heal old CPS configs that set `varDiff.maxDiff` to 0, which can force
+        # the assigned difficulty to 0 and break hashrate accounting.
+        if [ -f /data/pool/cps/pool_configs/peercoin.json ]; then
+          tmp="$$(mktemp)"
+          if jq '(.ports["3333"].varDiff.maxDiff // null) as $$m | if ($$m == 0) then .ports["3333"].varDiff.maxDiff = null else . end' /data/pool/cps/pool_configs/peercoin.json > "$$tmp" 2>/dev/null; then
+            mv "$$tmp" /data/pool/cps/pool_configs/peercoin.json
+            chown 1000:1000 /data/pool/cps/pool_configs/peercoin.json || true
+          else
+            rm -f "$$tmp" || true
+          fi
+        fi
         if [ ! -f /data/pool/cps/coins/peercoin.json ]; then
           cp "$$tpl_dir/cps-coin-peercoin.json.template" /data/pool/cps/coins/peercoin.json
           chown -R 1000:1000 /data/pool/cps || true
@@ -212,7 +223,7 @@ services:
     restart: unless-stopped
 
   pool:
-    image: ghcr.io/willitmod/axeppc-pool:0.2.21
+    image: ghcr.io/willitmod/axeppc-pool:0.2.22
     user: "1000:1000"
     restart: unless-stopped
     depends_on:
@@ -231,7 +242,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/cps/coins/peercoin.json:/app/coins/peercoin.json:ro
 
   app:
-    image: ghcr.io/willitmod/axeppc-app-umbrel-dev:0.2.21
+    image: ghcr.io/willitmod/axeppc-app-umbrel-dev:0.2.22
     user: "1000:1000"
     restart: unless-stopped
     stop_grace_period: 30s
@@ -255,7 +266,7 @@ services:
       PPC_RPC_USER: "ppc"
       PPC_RPC_PASS: "${APP_PASSWORD}"
       POOL_BACKEND: "cps"
-      POOL_IMAGE: "ghcr.io/willitmod/axeppc-pool:0.2.21"
+      POOL_IMAGE: "ghcr.io/willitmod/axeppc-pool:0.2.22"
       POOL_STATS_URL: "http://pool:8080/api/stats"
       POOL_STRATUM_HOST: "pool"
       POOL_STRATUM_PORT: "3333"
