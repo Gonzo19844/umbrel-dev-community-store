@@ -150,7 +150,8 @@ services:
         fi
 
   ppcd:
-    image: ghcr.io/willitmod/peercoin-core:0.15.1ppc
+    build:
+      context: ${APP_DATA_DIR}/data/peercoind
     user: "1000:1000"
     restart: unless-stopped
     depends_on:
@@ -160,7 +161,8 @@ services:
       - ${APP_DATA_DIR}/data/node:/data
 
   wallet_init:
-    image: ghcr.io/willitmod/peercoin-core:0.15.1ppc
+    build:
+      context: ${APP_DATA_DIR}/data/peercoind
     user: "1000:1000"
     restart: "no"
     environment:
@@ -247,7 +249,7 @@ services:
       STATIC_DIR: "/app/static"
       APP_CHANNEL: "DEV"
       APP_VERSION_SUFFIX: "-dev"
-      PPCD_IMAGE: "ghcr.io/willitmod/peercoin-core:0.15.1ppc"
+      PPCD_IMAGE: ""
       PPC_RPC_HOST: "ppcd"
       PPC_RPC_PORT: "9902"
       PPC_RPC_USER: "ppc"
