@@ -1,8 +1,8 @@
-manifestVersion: 1
+﻿manifestVersion: 1
 id: willitmod-dev-axebench
 category: bitcoin
 name: AxeBench (Dev)
-version: "3.0.21"
+version: "3.0.22"
 tagline: Bitaxe fleet benchmarking and management
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axebench/icon.png
 description: >-
@@ -33,5 +33,6 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 releaseNotes: >-
-  v3.0.21: Add per-device “Miner Web UI” override and make worker names clickable (open miner UI in a new tab).
+  v3.0.22: Persist warning thresholds on the server (global + per-device overrides).
 submitter: WillItMod
+
