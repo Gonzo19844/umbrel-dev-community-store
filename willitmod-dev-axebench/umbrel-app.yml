@@ -2,7 +2,7 @@
 id: willitmod-dev-axebench
 category: bitcoin
 name: AxeBench (Dev)
-version: "3.0.24"
+version: "3.0.25"
 tagline: Bitaxe fleet benchmarking and management
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axebench/icon.png
 description: >-
@@ -33,6 +33,6 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 releaseNotes: >-
-  v3.0.24: Fine-tune expected-hashrate auto-calibration plus Nerd firmware metric compatibility.
+  v3.0.25: Improve Nerd firmware ASIC-error fallback (uses reject-ratio proxy when duplicateHWNonces stays zero).
 submitter: WillItMod
 
