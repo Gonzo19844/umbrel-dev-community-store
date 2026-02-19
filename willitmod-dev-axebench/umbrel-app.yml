@@ -2,7 +2,7 @@
 id: willitmod-dev-axebench
 category: bitcoin
 name: AxeBench (Dev)
-version: "3.0.29"
+version: "3.0.30"
 tagline: Bitaxe fleet benchmarking and management
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axebench/icon.png
 description: >-
@@ -33,5 +33,5 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 releaseNotes: >-
-  v3.0.29: Calibrate expected hashrate from live miner behavior and treat expected-vs-actual deficit as effective ASIC error signal for tuning.
+  v3.0.30: Fix Nano 3S add flow compatibility (legacy login endpoint support and model alias normalization), plus expose app UI version directly from runtime build version.
 submitter: WillItMod
