@@ -2,7 +2,7 @@
 id: willitmod-dev-axebench
 category: bitcoin
 name: AxeBench (Dev)
-version: "3.0.29"
+version: "3.0.30"
 tagline: Bitaxe fleet benchmarking and management
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axebench/icon.png
 description: >-
@@ -33,5 +33,5 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 releaseNotes: >-
-  v3.0.29: Temporary rollback to public GHCR package for install compatibility while 3.0.30 package visibility is corrected.
+  v3.0.30: Fix Nano 3S add flow compatibility (legacy login endpoint support and model alias normalization), plus expose app UI version directly from runtime build version.
 submitter: WillItMod
