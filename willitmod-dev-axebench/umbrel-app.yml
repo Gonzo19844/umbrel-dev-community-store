@@ -2,7 +2,7 @@
 id: willitmod-dev-axebench
 category: bitcoin
 name: AxeBench (Dev)
-version: "4.0.18"
+version: "4.0.19"
 tagline: Bitaxe fleet benchmarking and management
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axebench/icon.png
 description: >-
@@ -33,8 +33,6 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 releaseNotes: >-
-  v4.0.18:
-    - Fix AxeShed schedule save error (HTTP 500) for start-only time blocks.
-    - Improve Operations scheduling profile lists (canonical profile names).
-    - Avoid networking issues from Docker subnet overlap by pinning the app network to a safe range.
+  v4.0.19:
+    - Fix Nano3s add flow: send fixed PSU voltage/amperage automatically (no user input required).
 submitter: WillItMod
