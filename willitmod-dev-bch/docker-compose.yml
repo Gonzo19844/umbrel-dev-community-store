@@ -185,7 +185,7 @@ services:
       start_period: 2m
 
   ckpool:
-    image: ghcr.io/willitmod/ckpool-solo:solobtc-f38f099
+    image: ghcr.io/willitmod/wim-solo-ckpool:0.8.2-rc1
     entrypoint: ["/bin/sh"]
     command:
       - -ec
@@ -243,7 +243,7 @@ services:
       APP_CHANNEL: "RC1"
       APP_VERSION_SUFFIX: "-dev"
       BCHN_IMAGE: "ghcr.io/willitmod/bitcoin-cash-node:v29.0.0-wm2"
-      CKPOOL_IMAGE: "ghcr.io/willitmod/ckpool-solo:solobtc-f38f099"
+      CKPOOL_IMAGE: "ghcr.io/willitmod/wim-solo-ckpool:0.8.2-rc1"
       STATIC_DIR: "/app/static"
 
 networks:
