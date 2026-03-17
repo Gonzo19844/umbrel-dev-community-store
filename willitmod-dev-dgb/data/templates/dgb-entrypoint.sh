@@ -8,6 +8,38 @@ if ! command -v digibyted >/dev/null 2>&1; then
   exit 127
 fi
 
+heal_node_json() {
+  file="$1"
+  name="$2"
+  [ -e "$file" ] || return 0
+
+  if [ ! -s "$file" ]; then
+    ts="$(date +%Y%m%dT%H%M%SZ 2>/dev/null || date +%s)"
+    echo "[axedgb] Removing empty $name: $file"
+    mv "$file" "$file.bad.$ts" 2>/dev/null || rm -f "$file" || true
+    return 0
+  fi
+
+  if command -v jq >/dev/null 2>&1; then
+    if ! jq -e 'type == "object"' < "$file" >/dev/null 2>&1; then
+      ts="$(date +%Y%m%dT%H%M%SZ 2>/dev/null || date +%s)"
+      echo "[axedgb] Quarantining malformed $name: $file"
+      mv "$file" "$file.bad.$ts" 2>/dev/null || rm -f "$file" || true
+    fi
+  fi
+}
+
+if [ "$(id -u)" = "0" ]; then
+  mkdir -p /data || true
+  chown 1000:1000 /data 2>/dev/null || true
+  chmod 755 /data 2>/dev/null || true
+  [ -f /data/digibyte.conf ] && chown 1000:1000 /data/digibyte.conf 2>/dev/null || true
+  [ -f /data/.dbcache_mb ] && chown 1000:1000 /data/.dbcache_mb 2>/dev/null || true
+  [ -f /data/settings.json ] && chown 1000:1000 /data/settings.json 2>/dev/null || true
+fi
+
+heal_node_json /data/settings.json "DigiByte settings file"
+
 extra=""
 if [ -f /data/.reindex-chainstate ]; then
   echo "[axedgb] Reindex requested (chainstate)."

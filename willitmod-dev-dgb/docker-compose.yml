@@ -28,10 +28,13 @@ services:
         mkdir -p /data/pool/postgres
         chown -R 70:70 /data/pool/postgres || true
         chmod 700 /data/pool/postgres || true
-        # Ensure the UI can update digibyte.conf (/data/node). If this becomes
-        # root-owned, Settings will fail with Errno 13 permission denied.
-        mkdir -p /data/node
+        # Ensure all app-writable state dirs stay owned by the UI user.
+        # If these drift to root, settings saves and self-heal passes fail.
+        mkdir -p /data/node /data/pool/config /data/ui/state /data/templates
         chown -R 1000:1000 /data/node || true
+        chown -R 1000:1000 /data/pool/config || true
+        chown -R 1000:1000 /data/ui/state || true
+        chown -R 1000:1000 /data/templates || true
 
   perm_watchdog:
     image: alpine:3.22.1
@@ -46,6 +49,18 @@ services:
         # Some hosts/app-update flows can clobber Postgres ownership while the stack is running
         # (e.g., blanket chown of the app state dir). Watch for it and self-heal.
         pg_dir="/data/pool/postgres"
+        check_ui_dir() {
+          dir="$$1"
+          label="$$2"
+          if [ -d "$$dir" ]; then
+            uid="$$(stat -c '%u' "$$dir" 2>/dev/null || echo '')"
+            gid="$$(stat -c '%g' "$$dir" 2>/dev/null || echo '')"
+            if [ "$$uid" != "1000" ] || [ "$$gid" != "1000" ]; then
+              echo "[axedgb] Fixing $$label ownership (1000:1000)"
+              chown -R 1000:1000 "$$dir" 2>/dev/null || true
+            fi
+          fi
+        }
         while true; do
           if [ -d "$$pg_dir" ]; then
             uid="$$(stat -c '%u' "$$pg_dir" 2>/dev/null || echo '')"
@@ -56,6 +71,10 @@ services:
               chmod 700 "$$pg_dir" 2>/dev/null || true
             fi
           fi
+          check_ui_dir /data/node "node dir"
+          check_ui_dir /data/pool/config "pool config dir"
+          check_ui_dir /data/ui/state "UI state dir"
+          check_ui_dir /data/templates "templates dir"
           sleep 5
         done
 
@@ -116,6 +135,33 @@ services:
         fi
 
         mkdir -p /data/node /data/pool/config /data/pool/postgres /data/templates
+        mkdir -p /data/ui/state
+
+        heal_json_file() {
+          file="$$1"
+          label="$$2"
+          action="$${3:-quarantine}"
+          [ -e "$$file" ] || return 0
+
+          bad="0"
+          if [ ! -s "$$file" ]; then
+            bad="1"
+          elif command -v jq >/dev/null 2>&1; then
+            if ! jq -e '.' < "$$file" >/dev/null 2>&1; then
+              bad="1"
+            fi
+          fi
+
+          if [ "$$bad" = "1" ]; then
+            ts="$$(date +%Y%m%dT%H%M%SZ 2>/dev/null || date +%s)"
+            echo "[axedgb] Self-heal: $$label is empty or malformed"
+            if [ "$$action" = "remove" ]; then
+              rm -f "$$file" || true
+            else
+              mv "$$file" "$$file.bad.$$ts" 2>/dev/null || rm -f "$$file" || true
+            fi
+          fi
+        }
 
         # Postgres runs as uid:gid 70:70 in the official alpine images.
         # Ensure the bind-mounted datadir is writable to avoid "pg_filenode.map: Permission denied" on upgrades.
@@ -127,6 +173,14 @@ services:
           chown -R 70:70 "$$pg_dir" 2>/dev/null || true
         fi
         chmod 700 "$$pg_dir" 2>/dev/null || true
+        chown -R 1000:1000 /data/node /data/pool/config /data/ui/state /data/templates 2>/dev/null || true
+
+        # Self-heal empty/malformed app state before the node or UI consumes it.
+        heal_json_file /data/node/settings.json "DigiByte settings file"
+        heal_json_file /data/ui/state/pool_settings.json "pool settings state"
+        heal_json_file /data/ui/state/boot_repair.json "boot repair state"
+        heal_json_file /data/pool/config/miningcore.json "Miningcore config"
+        heal_json_file /data/pool/config/coins.json "Miningcore coins config" remove
 
         # Ensure dbcache preset exists. The UI can change this later.
         if [ ! -f /data/node/.dbcache_mb ]; then
@@ -840,7 +894,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/config/coins.json:/app/coins.json:ro
 
   app:
-    image: ghcr.io/willitmod/axedgb-app:0.9.164-dev
+    image: ghcr.io/willitmod/axedgb-app:0.9.165-dev
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s
