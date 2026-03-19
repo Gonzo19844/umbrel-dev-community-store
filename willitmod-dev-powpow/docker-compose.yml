@@ -48,8 +48,7 @@ services:
       - ${APP_DATA_DIR}/data:/data
     environment:
       APP_CHANNEL: "DEV"
-      APP_VERSION: "0.2.0-dev"
-      NETWORK_IP: "${NETWORK_IP}"
+      NETWORK_HOST_HINT: "${NETWORK_IP}"
       POOL_API_URL: "http://pool:8001"
       POSTGRES_PASSWORD: "${APP_PASSWORD}"
 
