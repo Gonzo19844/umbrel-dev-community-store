@@ -25,7 +25,7 @@ services:
         chmod 700 /data/postgres || true
 
   app:
-    image: ghcr.io/willitmod/powpow-app:0.2.0-dev
+    image: ghcr.io/willitmod/powpow-app:0.2.1-dev
     user: "1000:1000"
     restart: unless-stopped
     depends_on:
@@ -53,7 +53,7 @@ services:
       POSTGRES_PASSWORD: "${APP_PASSWORD}"
 
   litecoin:
-    image: ghcr.io/willitmod/powpow-litecoin:0.2.0-dev
+    image: ghcr.io/willitmod/powpow-litecoin:0.2.1-dev
     restart: unless-stopped
     depends_on:
       init_permissions:
@@ -68,7 +68,7 @@ services:
       start_period: 2m
 
   dogecoin:
-    image: ghcr.io/willitmod/powpow-dogecoin:0.2.0-dev
+    image: ghcr.io/willitmod/powpow-dogecoin:0.2.1-dev
     restart: unless-stopped
     depends_on:
       init_permissions:
@@ -83,7 +83,7 @@ services:
       start_period: 2m
 
   pool:
-    image: ghcr.io/willitmod/powpow-pool:0.2.0-dev
+    image: ghcr.io/willitmod/powpow-pool:0.2.1-dev
     restart: unless-stopped
     depends_on:
       init_permissions:

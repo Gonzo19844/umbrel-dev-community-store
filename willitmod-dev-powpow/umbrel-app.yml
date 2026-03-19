@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-powpow
 category: altcoin
 name: "PowPow"
-version: "0.2.0-dev"
+version: "0.2.1-dev"
 tagline: LTC + DOGE merged mining (experimental dev)
 description: >-
   WARNING: EXPERIMENTAL-DEV (TESTING ONLY)
