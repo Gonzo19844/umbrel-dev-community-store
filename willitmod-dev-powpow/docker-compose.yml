@@ -25,7 +25,7 @@ services:
         chmod 700 /data/postgres || true
 
   app:
-    image: ghcr.io/willitmod/powpow-app:0.2.3-dev
+    image: ghcr.io/willitmod/powpow-app:0.2.4-dev
     user: "1000:1000"
     restart: unless-stopped
     depends_on:
@@ -47,14 +47,14 @@ services:
     volumes:
       - ${APP_DATA_DIR}/data:/data
     environment:
-      APP_VERSION: "0.2.3"
+      APP_VERSION: "0.2.4"
       APP_CHANNEL: "DEV"
       NETWORK_HOST_HINT: "${NETWORK_IP}"
       POOL_API_URL: "http://pool:8001"
       POSTGRES_PASSWORD: "${APP_PASSWORD}"
 
   litecoin:
-    image: ghcr.io/willitmod/powpow-litecoin:0.2.3-dev
+    image: ghcr.io/willitmod/powpow-litecoin:0.2.4-dev
     restart: unless-stopped
     depends_on:
       init_permissions:
@@ -69,7 +69,7 @@ services:
       start_period: 2m
 
   dogecoin:
-    image: ghcr.io/willitmod/powpow-dogecoin:0.2.3-dev
+    image: ghcr.io/willitmod/powpow-dogecoin:0.2.4-dev
     restart: unless-stopped
     depends_on:
       init_permissions:
@@ -84,7 +84,7 @@ services:
       start_period: 2m
 
   pool:
-    image: ghcr.io/willitmod/powpow-pool:0.2.3-dev
+    image: ghcr.io/willitmod/powpow-pool:0.2.4-dev
     restart: unless-stopped
     depends_on:
       init_permissions:
