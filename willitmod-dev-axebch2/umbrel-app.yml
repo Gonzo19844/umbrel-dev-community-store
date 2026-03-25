@@ -2,8 +2,8 @@ manifestVersion: 1
 id: axebch2
 category: altcoin
 name: "AxeBCH2"
-version: "0.1.0-dev"
-tagline: BCH2 node + solo pool (experimental dev, amd64 only)
+version: "0.1.1-dev"
+tagline: BCH2 node + solo pool (experimental dev)
 description: >-
   WARNING: EXPERIMENTAL-DEV (TESTING ONLY)
 
@@ -12,9 +12,6 @@ description: >-
   THIS APP IS IN DEVELOPMENT. IT MAY WORK, IT MAY NOT. THIS IS FOR TESTING ONLY.
   If you want to support development, use this app and provide HELPFUL feedback.
   If you want a working known-good app, DO NOT USE DEV APPS.
-
-  Temporary release note:
-    - `0.1.0-dev` is an `amd64-only` stopgap while `0.1.1-dev` multi-arch finishes publishing.
 
   Miner connection:
     - URL: `stratum+tcp://<your-5tratumos-host-ip>:9265`
