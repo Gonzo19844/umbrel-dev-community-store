@@ -4,13 +4,26 @@ Development/test app store for WillItMod apps.
 
 ## Apps
 
-- **Bitcoin** (`willitmod-dev-btc`): BTC full node (Core/Knots) + solo Stratum v1 pool (ckpool) in a single app.
-- **Bitcoin Cash** (`willitmod-dev-bch`): BCH full node (BCHN) + solo Stratum v1 pool (ckpool) in a single app.
-- **BitcoinII** (`willitmod-dev-bc2`): BitcoinII (BC2) full node + solo Stratum v1 pool (ckpool) in a single app.
-- **DigiByte** (`willitmod-dev-dgb`): DigiByte Core full node + solo Stratum v1 pool (ckpool) in a single app (experimental).
-- **eCash** (`willitmod-dev-xec`): eCash (XEC) full node + solo Stratum v1 pool (ckpool) in a single app.
-- **Peercoin** (`willitmod-dev-ppc`): Peercoin full node + solo Stratum v1 pool (ckpool) in a single app.
-- **AxeMIG** (`willitmod-dev-axemig`): data-only blockchain migration tool (experimental).
+### Hosted / utility apps
+
+- **AxeBench (Dev)** (`willitmod-dev-axebench`) - `4.0.20`
+- **AxeLive (Dev)** (`willitmod-dev-axelive`) - `1.4-dev`
+- **AxeMIG** (`willitmod-dev-axemig`) - `0.1.17`
+
+### Node + solo pool / mining apps
+
+- **AxeBTC** (`willitmod-dev-btc`) - `0.7.82.4-dev`
+- **AxeBCH** (`willitmod-dev-bch`) - `0.8.3-rc1-dev`
+- **AxeBCH2** (`axebch2`) - `0.1.28-dev`
+- **AxeBC2** (`willitmod-dev-bc2`) - `0.1.6-dev`
+- **AxeDGB** (`willitmod-dev-dgb`) - `0.9.166-dev`
+- **AxePPC** (`willitmod-dev-ppc`) - `0.2.30-dev`
+- **AxeXEC** (`willitmod-dev-xec`) - `0.1.10-dev`
+- **PowPow** (`axepowpow`) - `0.2.12-dev`
+
+Use `umbrel-app.yml` in each app directory as the current source of truth for the store-visible version number.
+
+For the broader cross-store version matrix and changelog pointers, see `https://github.com/WillItMod/AxeSuite/blob/main/docs/releases.md`.
 
 ## Quick setup (solo mining)
 
@@ -18,12 +31,15 @@ Development/test app store for WillItMod apps.
 2. Point miners at:
    - BTC: `stratum+tcp://<host-ip>:7890`
    - BCH: `stratum+tcp://<host-ip>:4567`
-   - BSV: `stratum+tcp://<host-ip>:8901`
+   - BCH2: `stratum+tcp://<host-ip>:9265`
    - BC2: `stratum+tcp://<host-ip>:2345`
    - DGB (SHA256): `stratum+tcp://<host-ip>:5678`
    - DGB (Scrypt): `stratum+tcp://<host-ip>:5679`
    - XEC: `stratum+tcp://<host-ip>:4321`
-   - PPC: `stratum+tcp://<host-ip>:9876`
+   - PPC: `stratum+tcp://<host-ip>:8765`
+   - PowPow (LTC + DOGE merged mining): `stratum+tcp://<host-ip>:9555`
+
+Hosted / utility apps such as AxeBench, AxeLive, and AxeMIG are dashboard/UI apps rather than miner endpoints.
 
 ## Address format notes
 
