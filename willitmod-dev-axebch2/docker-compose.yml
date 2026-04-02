@@ -24,7 +24,7 @@ services:
         chmod -R ug+rwX /data/ui /data/node /data/pool || true
 
   app:
-    image: ghcr.io/willitmod/axebch2-app:0.1.25-dev
+    image: ghcr.io/willitmod/axebch2-app:0.1.26-dev
     user: "1000:1000"
     restart: unless-stopped
     depends_on:
@@ -42,7 +42,7 @@ services:
     volumes:
       - ${APP_DATA_DIR}/data:/data
     environment:
-      APP_VERSION: "0.1.25"
+      APP_VERSION: "0.1.26"
       APP_CHANNEL: "DEV"
       NETWORK_IP: "${NETWORK_IP}"
       BCH2_NODE_IMAGE: "ghcr.io/willitmod/axebch2-node:0.1.24-dev"
