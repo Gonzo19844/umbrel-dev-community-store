@@ -24,7 +24,7 @@ services:
         chmod -R ug+rwX /data/ui /data/node /data/pool || true
 
   app:
-    image: ghcr.io/willitmod/axebch2-app:0.1.28-dev
+    image: ghcr.io/willitmod/axebch2-app:0.1.29-dev
     user: "1000:1000"
     restart: unless-stopped
     depends_on:
@@ -42,11 +42,11 @@ services:
     volumes:
       - ${APP_DATA_DIR}/data:/data
     environment:
-      APP_VERSION: "0.1.28"
+      APP_VERSION: "0.1.29"
       APP_CHANNEL: "DEV"
       NETWORK_IP: "${NETWORK_IP}"
-      BCH2_NODE_IMAGE: "ghcr.io/willitmod/axebch2-node:0.1.27-dev"
-      CKPOOL_IMAGE: "ghcr.io/willitmod/axebch2-ckpool:0.1.28-dev"
+      BCH2_NODE_IMAGE: "ghcr.io/willitmod/axebch2-node:0.1.29-dev"
+      CKPOOL_IMAGE: "ghcr.io/willitmod/axebch2-ckpool:0.1.29-dev"
       BCH2_RPC_HOST: "bch2"
       BCH2_RPC_PORT: "8342"
       BCH2_RPC_USER: "bch2"
@@ -63,7 +63,7 @@ services:
       start_period: 90s
 
   bch2:
-    image: ghcr.io/willitmod/axebch2-node:0.1.27-dev
+    image: ghcr.io/willitmod/axebch2-node:0.1.29-dev
     restart: unless-stopped
     stop_grace_period: 15m30s
     depends_on:
@@ -85,6 +85,8 @@ services:
       BOOTSTRAP_CONNECTNODES: ""
       PEER_WATCHDOG_INTERVAL: "30"
       PEER_WATCHDOG_MIN_CONNECTIONS: "1"
+      ONE_TIME_REINDEX_KEY: "bitcoincashii-v27.0.2"
+      ONE_TIME_REINDEX_REQUIRE_EXISTING_DATA: "1"
     volumes:
       - ${APP_DATA_DIR}/data/node:/data/node
     ports:
@@ -99,7 +101,7 @@ services:
       start_period: 2m
 
   ckpool:
-    image: ghcr.io/willitmod/axebch2-ckpool:0.1.28-dev
+    image: ghcr.io/willitmod/axebch2-ckpool:0.1.29-dev
     restart: unless-stopped
     stop_grace_period: 30s
     depends_on:
