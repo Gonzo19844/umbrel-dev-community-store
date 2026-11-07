@@ -104,8 +104,8 @@ function makeQuote(rigs, targetPH, hours) {
     const error = new Error('Hashrate muss zwischen 1 und 100 PH/s liegen.');
     error.status = 400; throw error;
   }
-  if (!Number.isFinite(hours) || hours < MIN_HOURS || hours > 720) {
-    const error = new Error('Mietdauer muss mindestens 3 und höchstens 720 Stunden betragen.');
+  if (!Number.isFinite(hours) || hours < MIN_HOURS) {
+    const error = new Error('Mietdauer muss mindestens 3 Stunden betragen.');
     error.status = 400; throw error;
   }
 
