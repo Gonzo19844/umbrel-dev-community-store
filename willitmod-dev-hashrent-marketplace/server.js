@@ -345,7 +345,7 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  const requested = pathname === '/' ? 'index.html' : (pathname === '/settings' ? 'settings.html' : pathname.replace(/^\/+/, ''));
+  const requested = pathname === '/' ? 'index.html' : (pathname === '/admin' || pathname === '/settings' ? 'admin.html' : (pathname.startsWith('/order/') ? 'order.html' : pathname.replace(/^\/+/, '')));
   const file = path.resolve(PUBLIC_DIR, requested);
   if (!file.startsWith(PUBLIC_DIR + path.sep)) {
     res.writeHead(403); return res.end('Forbidden');
