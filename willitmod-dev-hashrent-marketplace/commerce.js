@@ -90,8 +90,15 @@ function createCommerce(deps) {
     if (!response.ok) throw new Error(data.message || data.error || ('NOWPayments HTTP ' + response.status));
     return data;
   }
+  function defaultOfferImage(offer) {
+    if (Number(offer.maxPH) <= 0.1) return '/images/miner-starter.svg';
+    if (Number(offer.maxPH) <= 1) return '/images/miner-pro.svg';
+    if (Number(offer.maxPH) <= 10) return '/images/miner-power.svg';
+    if (Number(offer.maxPH) <= 50) return '/images/miner-industrial.svg';
+    return '/images/miner-enterprise.svg';
+  }
   function safeOffer(offer) {
-    return { id: offer.id, name: offer.name, description: offer.description, minPH: offer.minPH, maxPH: offer.maxPH, minHours: offer.minHours, maxHours: offer.maxHours, enabled: offer.enabled === true };
+    return { id: offer.id, name: offer.name, description: offer.description, minPH: offer.minPH, maxPH: offer.maxPH, minHours: offer.minHours, maxHours: offer.maxHours, imageUrl: offer.imageUrl || defaultOfferImage(offer), enabled: offer.enabled === true };
   }
   async function provision(order) {
     if (busyOrders.has(order.id)) return;
@@ -254,7 +261,10 @@ function createCommerce(deps) {
         const minHours = Number(body.minHours), maxHours = Number(body.maxHours);
         if (!name || name.length > 64 || !Number.isFinite(minPH) || !Number.isFinite(maxPH) || minPH < 0.005 || maxPH > 100 || minPH > maxPH || minHours < 3 || maxHours > 720 || minHours > maxHours) return json(res, 400, { error: 'Bitte Name, Hashrate 5 TH/s–100 PH/s und Mietdauer 3–720 Stunden korrekt angeben.' });
         const rows = offers();
-        const offer = { id: String(body.id || token().slice(0, 12)), name, description: String(body.description || '').slice(0, 300), minPH, maxPH, minHours, maxHours, enabled: body.enabled !== false, updatedAt: new Date().toISOString() };
+        const allowedImages = ['', '/images/miner-starter.svg', '/images/miner-pro.svg', '/images/miner-power.svg', '/images/miner-industrial.svg', '/images/miner-enterprise.svg'];
+        const imageUrl = String(body.imageUrl || '');
+        if (!allowedImages.includes(imageUrl)) return json(res, 400, { error: 'Bitte ein gültiges HASHRENT-Minerbild auswählen.' });
+        const offer = { id: String(body.id || token().slice(0, 12)), name, description: String(body.description || '').slice(0, 300), minPH, maxPH, minHours, maxHours, imageUrl, enabled: body.enabled !== false, updatedAt: new Date().toISOString() };
         const index = rows.findIndex(x => x.id === offer.id);
         if (index >= 0) rows[index] = offer; else rows.push(offer);
         writeFile(offersFile, rows);
