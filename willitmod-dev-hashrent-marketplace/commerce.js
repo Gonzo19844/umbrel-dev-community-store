@@ -259,7 +259,7 @@ function createCommerce(deps) {
         }, cfg.nowPaymentsKey);
         if (!invoice.invoice_url || !invoice.id) throw new Error('NOWPayments hat keine gültige Rechnungs-URL zurückgegeben.');
         const rows = orders();
-        rows.push({ id, accessToken, offerName: offer.name, targetPH, hours, currency, priceEUR: Number(priceEUR.toFixed(2)), customerBTC, baseBTC: Number(quote.baseBTC), privateRigs: quote.rigs, paymentInvoiceId: String(invoice.id), paymentStatus: 'waiting', status: 'pending_payment', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+        rows.push({ id, accessToken, offerName: offer.name, targetPH, hours, currency, priceEUR: Number(priceEUR.toFixed(2)), customerBTC, baseBTC: Number(quote.baseBTC), markupBTC: Number(customerBTC - Number(quote.baseBTC)), privateRigs: quote.rigs, paymentInvoiceId: String(invoice.id), paymentStatus: 'waiting', status: 'pending_payment', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
         saveOrders(rows);
         return json(res, 201, { ok: true, orderId: id, statusToken: accessToken, invoiceUrl: invoice.invoice_url, priceEUR: Number(priceEUR.toFixed(2)), currency });
       } catch (error) { return json(res, 502, { error: error.message || 'Checkout konnte nicht erstellt werden.' }); }
