@@ -216,7 +216,7 @@ const server = http.createServer(async (req, res) => {
   const pathname = url.pathname;
   const commerceHandled = await handleCommerce(req, res, pathname, url);
   if (commerceHandled !== false) return;
-  if (pathname === '/health') return json(res, 200, { ok: true, app: 'HASHRENT', version: '0.5.0' });
+  if (pathname === '/health') return json(res, 200, { ok: true, app: 'HASHRENT', version: '0.5.2' });
   if (pathname === '/api/settings' && req.method === 'GET') {
     return json(res, 200, { configured: Boolean(credentials.key && credentials.secret), source: fs.existsSync(CONFIG_FILE) ? 'encrypted-file' : (credentials.key ? 'environment' : 'none') });
   }
@@ -357,4 +357,4 @@ const server = http.createServer(async (req, res) => {
     res.end(data);
   });
 });
-server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.5.0 listening on ' + PORT));
+server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.5.2 listening on ' + PORT));
