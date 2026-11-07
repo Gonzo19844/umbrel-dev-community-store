@@ -33,5 +33,23 @@
 </div>
 <p class="note">Unverbindliche Live-Kalkulation. Noch keine Bestellung, Miete oder Zahlung möglich.</p>
 </div></section>
-<footer><span>HASHRENT</span><span>Umbrel Community App · 0.3.0 · SHA-256 ASICBoost only</span></footer>
+
+<section id="rental-panel" class="section rental-panel">
+<div class="eyebrow">MRR-KONTO</div><h2>Meine Mieten & Buchung</h2>
+<div id="account-message" class="notice">MRR-Konto wird geprüft …</div>
+<div class="booking-card">
+<h3>Rig zur Miete vormerken</h3>
+<p class="muted small">Einzelne Rigs werden direkt über dein verbundenes MRR-Konto gemietet. HASHRENT führt keine automatischen Mehrfachbuchungen aus.</p>
+<div id="selected-rig" class="notice compact">Bitte bei einem Live-Angebot auf „Miete vorbereiten“ klicken.</div>
+<label>Dein SHA-256 ASICBoost Pool-Profil<select id="pool-profile"><option value="">Profile werden geladen …</option></select></label>
+<label>Mietdauer (Stunden)<input id="rental-hours" type="number" min="3" max="720" step="1" value="24"></label>
+<div id="rental-total" class="total final"><span>Preis inkl. 5 % HASHRENT-Aufschlag</span><strong>–</strong></div>
+<label class="confirm-label"><input id="rental-confirm" type="checkbox"> Ich bestätige diese konkrete Miete. MRR belastet mein verbundenes MRR-Konto direkt. Der 5-%-Aufschlag wird derzeit nur angezeigt und nicht separat eingezogen.</label>
+<button class="primary full" id="place-rental" disabled>Jetzt bei MRR mieten</button>
+<div id="rental-message" class="notice compact">Noch keine Miete ausgelöst.</div>
+</div>
+<div class="section-head rentals-head"><div><div class="eyebrow">KONTOÜBERSICHT</div><h3>Aktive Mieten</h3></div><button class="secondary" id="refresh-rentals">Aktualisieren</button></div>
+<div id="rentals-list" class="rentals-list"></div>
+</section>
+<footer><span>HASHRENT</span><span>Umbrel Community App · 0.4.0 · SHA-256 ASICBoost only</span></footer>
 </main><script src="/app.js"></script></body></html>
