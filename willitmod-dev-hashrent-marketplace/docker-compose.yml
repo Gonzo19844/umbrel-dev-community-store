@@ -5,7 +5,7 @@ services:
       APP_HOST: willitmod-dev-hashrent-marketplace_server_1
       APP_PORT: 3000
   server:
-    image: ghcr.io/gonzo19844/hashrent:0.2.0
+    image: ghcr.io/gonzo19844/hashrent:0.3.0
     init: true
     restart: on-failure
     stop_grace_period: 30s
