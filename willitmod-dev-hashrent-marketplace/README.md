@@ -1,8 +1,8 @@
 # HASHRENT – Umbrel Community App
 
-HASHRENT 0.2.0 ist ein SHA-256-ASICBoost-Marktplatz-Prototyp mit Live-Marktdaten von MiningRigRentals (MRR) API v2.
+HASHRENT 0.3.0 ist ein SHA-256-ASICBoost-Marktplatz-Prototyp mit Live-Marktdaten von MiningRigRentals (MRR) API v2.
 
-## Umfang in 0.2.0
+## Umfang in 0.3.0
 
 - Ausschließlich der MRR-Algorithmus `sha256ab` (SHA-256 ASICBoost).
 - Serverseitiger Abruf und 60-Sekunden-Cache für Rig-Angebote.
@@ -11,6 +11,9 @@ HASHRENT 0.2.0 ist ein SHA-256-ASICBoost-Marktplatz-Prototyp mit Live-Marktdaten
 - Preisrechner für 1–100 PH/s und mindestens 3 Stunden.
 - Automatische, preisorientierte Kombination verfügbarer Rigs.
 - Fester HASHRENT-Aufschlag von 5 %.
+- Eigene API-Einstellungsseite mit Verbindungstest für MRR.
+- API-Key und Secret werden mit AES-256-GCM verschlüsselt im persistenten App-Datenverzeichnis gespeichert; der Schlüssel liegt separat mit Dateirechten 0600.
+- Zugangsdaten werden nie an den Browser zurückgegeben oder in Logs geschrieben.
 - Keine echten Mietaufträge, Poolprofile, Wallet-Operationen oder Zahlungen.
 
 ## MRR API einrichten
@@ -22,7 +25,7 @@ Setze auf dem Umbrel-Host die folgenden Variablen für den App-Container:
 - `MRR_API_KEY`: persönlicher MiningRigRentals API-Key
 - `MRR_API_SECRET`: persönliches API-Secret
 
-Die Werte dürfen niemals in Git committed oder im Browser ausgegeben werden. In dieser Entwicklungsfassung sind die Variablen als Compose-Umgebungsvariablen vorbereitet. Ohne Zugangsdaten zeigt die App einen klaren Konfigurationshinweis statt erfundener Demo-Livepreise.
+Die Werte dürfen niemals in Git committed oder im Browser ausgegeben werden. Alternativ können die Zugangsdaten nach dem Start unter `/settings` eingegeben werden. Die App prüft die MRR-Verbindung vor dem Speichern und verschlüsselt die Zugangsdaten lokal im persistenten App-Datenverzeichnis. Der Schlüssel zur Verschlüsselung wird separat mit Dateirechten 0600 abgelegt. Sichere das gesamte App-Datenverzeichnis inklusive `config.key`; ohne diesen Schlüssel können gespeicherte Zugangsdaten nach einer Wiederherstellung nicht entschlüsselt werden. Die Einstellungsseite zeigt nur den Verbindungsstatus und gibt die gespeicherten Schlüssel nicht wieder aus. Ohne Zugangsdaten zeigt die App einen klaren Konfigurationshinweis statt erfundener Demo-Livepreise.
 
 ## Kalkulation
 
@@ -32,7 +35,7 @@ Die Werte dürfen niemals in Git committed oder im Browser ausgegeben werden. In
 - Die Rig-Auswahl berücksichtigt den verfügbaren Status sowie minhours/maxhours.
 - Falls die gewünschte Hashrate nicht vollständig verfügbar ist, wird das fehlende Volumen ausgewiesen.
 
-Die Kalkulation ist unverbindlich. MRR-Rig-Reservierung und echte Miete sind in 0.2.0 absichtlich nicht implementiert.
+Die Kalkulation ist unverbindlich. MRR-Rig-Reservierung und echte Miete sind in 0.3.0 absichtlich nicht implementiert.
 
 ## Lokaler Test
 
