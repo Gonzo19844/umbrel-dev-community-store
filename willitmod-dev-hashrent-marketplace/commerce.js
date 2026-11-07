@@ -133,6 +133,7 @@ function createCommerce(deps) {
   }
 
   return async function handleCommerce(req, res, pathname, url) {
+    if (['/api/market','/api/quote','/api/account','/api/rentals'].includes(pathname)) return json(res, 404, { error: 'Diese internen MRR-Endpunkte sind nicht öffentlich verfügbar.' });
     if (pathname === '/api/admin/status' && req.method === 'GET') {
       const cfg = getCredentials();
       return json(res, 200, { setupRequired: !admin(), authenticated: isAdmin(req), nowPaymentsConfigured: Boolean(cfg.nowPaymentsKey && cfg.nowPaymentsIpnSecret), mrrConfigured: Boolean(cfg.key && cfg.secret) });
@@ -192,7 +193,6 @@ function createCommerce(deps) {
         if (next.nowPaymentsKey && next.nowPaymentsIpnSecret) {
           await nowRequest('/status', 'GET', null, next.nowPaymentsKey);
         }
-        if (next.key && next.secret) await mrrGet('/whoami');
         saveCredentials(next);
         return json(res, 200, { ok: true, message: 'Einstellungen verschlüsselt gespeichert.' });
       } catch (error) { return json(res, 502, { error: error.message || 'Einstellungen konnten nicht gespeichert werden.' }); }
