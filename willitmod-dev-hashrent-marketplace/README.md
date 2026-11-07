@@ -1,13 +1,13 @@
 # HASHRENT – Umbrel Community App
 
-HASHRENT 0.5.0 stellt einen eigenen HASHRENT-Shop mit administrierbaren Angeboten und NOWPayments-Checkout bereit. MiningRigRentals wird ausschließlich serverseitig als Beschaffungsanbieter verwendet.
+HASHRENT 0.5.1 ist ein Versions- und Bereitstellungsupdate auf Basis von 0.5.0. Die App stellt einen eigenen HASHRENT-Shop mit administrierbaren Angeboten und NOWPayments-Checkout bereit. MiningRigRentals wird ausschließlich serverseitig als Beschaffungsanbieter verwendet.
 
 ## Öffentlicher Shop
 
 - Kunden sehen ausschließlich HASHRENT-Angebotsnamen, Beschreibungen und Hashrate-/Laufzeitgrenzen.
 - MRR-Rig-Namen, IDs, URLs, Eigentümer, Einkaufs- und Mietpreise werden nicht über öffentliche Endpunkte ausgegeben.
 - Öffentliche alte MRR-Markt-, Konto- und Miet-Endpunkte sind deaktiviert.
-- Ausschließlich SHA-256 ASICBoost (sha256ab), 1–100 PH/s je nach konfiguriertem Angebot, mindestens 3 Mietstunden.
+- Ausschließlich SHA-256 ASICBoost (sha256ab), Hashrate gemäß den administrierten Angeboten, mindestens 3 Mietstunden.
 - Die Angebote werden unter /admin verwaltet.
 
 ## Preis und interner Verdienst
@@ -47,8 +47,8 @@ Zugangsdaten werden gemeinsam mit dem bestehenden MRR-Schlüsselmaterial AES-256
 
 Der Workflow .github/workflows/hashrent-release.yml baut ghcr.io/gonzo19844/hashrent:VERSION und :latest.
 
-- Manuell: GitHub → Actions → HASHRENT container release → Run workflow, Version 0.5.0.
-- Automatisch: Tag hashrent-v0.5.0 pushen.
+- Manuell: GitHub → Actions → HASHRENT container release → Run workflow, Version 0.5.1.
+- Automatisch: Änderungen an HASHRENT auf main bauen das Image anhand der package.json-Version (0.5.1).
 - Das GHCR-Paket muss öffentlich sein, damit Umbrel es ohne GHCR-Anmeldung laden kann.
 
 ## Quellen
