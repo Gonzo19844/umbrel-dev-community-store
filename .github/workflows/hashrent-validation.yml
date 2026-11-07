@@ -1,0 +1,26 @@
+name: HASHRENT 0.2.0 validation
+on:
+  push:
+    branches:
+      - feature/hashrent-live-sha256ab-market
+    paths:
+      - "willitmod-dev-hashrent-marketplace/**"
+      - ".github/workflows/hashrent-validation.yml"
+  pull_request:
+    paths:
+      - "willitmod-dev-hashrent-marketplace/**"
+      - ".github/workflows/hashrent-validation.yml"
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check JavaScript syntax
+        run: |
+          node --check willitmod-dev-hashrent-marketplace/server.js
+          node --check willitmod-dev-hashrent-marketplace/public/app.js
+      - name: Build container
+        run: docker build -t hashrent:ci willitmod-dev-hashrent-marketplace
