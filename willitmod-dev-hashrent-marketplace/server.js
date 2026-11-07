@@ -300,7 +300,7 @@ const server = http.createServer(async (req, res) => {
         'rate[type]': priceType, 'rate[price]': ratePrice
       });
       if (created?.success === false || !(created?.id || created?.rentalid)) {
-        return json(res, 502, { error: created?.message || 'MRR hat keinen bestätigten Mietauftrag zurückgegeben.', details: created || null });
+        return json(res, 502, { error: created?.message || 'MRR hat keinen bestätigten Mietauftrag zurückgegeben.' });
       }
       cache = { at: 0, rigs: null };
       return json(res, 201, {
