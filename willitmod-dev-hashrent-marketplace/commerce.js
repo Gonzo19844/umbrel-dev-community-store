@@ -83,10 +83,11 @@ function createCommerce(deps) {
       if (!profile) throw new Error('Das konfigurierte MRR-Poolprofil ist nicht mehr verfügbar oder kein SHA-256-ASICBoost-Profil.');
 
       const live = await getMarket(true);
-      const quote = makeQuote(live, Number(current.targetPH), Number(current.hours));
-      if (!quote.complete) throw new Error('Die benötigte Hashrate ist nach Zahlung nicht mehr vollständig verfügbar.');
+      const selectedRigs = (current.privateRigs || []).map(saved => live.find(r => String(r.id) === String(saved.id))).filter(Boolean);
+      const supplied = selectedRigs.reduce((sum, r) => sum + Number(r.hashratePH || 0), 0);
+      if (selectedRigs.length !== (current.privateRigs || []).length || supplied + 1e-9 < Number(current.targetPH)) throw new Error('Die ursprünglich kalkulierte Hashrate ist nach Zahlung nicht mehr vollständig verfügbar.');
       const createdIds = [];
-      for (const selected of quote.rigs) {
+      for (const selected of selectedRigs) {
         const raw = await mrrGet('/rig/' + encodeURIComponent(String(selected.id)));
         const rig = Array.isArray(raw) ? raw[0] : raw;
         if (!rig || String(rig.type || '').toLowerCase() !== 'sha256ab' ||
@@ -133,7 +134,7 @@ function createCommerce(deps) {
   }
 
   return async function handleCommerce(req, res, pathname, url) {
-    if (['/api/market','/api/quote','/api/account','/api/rentals'].includes(pathname)) return json(res, 404, { error: 'Diese internen MRR-Endpunkte sind nicht öffentlich verfügbar.' });
+    if (['/api/market','/api/quote','/api/account','/api/rentals','/api/settings'].includes(pathname)) return json(res, 404, { error: 'Diese internen MRR-Endpunkte sind nicht öffentlich verfügbar.' });
     if (pathname === '/api/admin/status' && req.method === 'GET') {
       const cfg = getCredentials();
       return json(res, 200, { setupRequired: !admin(), authenticated: isAdmin(req), nowPaymentsConfigured: Boolean(cfg.nowPaymentsKey && cfg.nowPaymentsIpnSecret), mrrConfigured: Boolean(cfg.key && cfg.secret) });
@@ -224,6 +225,7 @@ function createCommerce(deps) {
       } catch (error) { return json(res, 400, { error: error.message || 'Angebot konnte nicht gespeichert werden.' }); }
     }
     if (pathname.startsWith('/api/admin/offers/') && req.method === 'DELETE') {
+      if (!sameOrigin(req)) return json(res, 403, { error: 'Ungültige Herkunft der Anfrage.' });
       const id = decodeURIComponent(pathname.slice('/api/admin/offers/'.length));
       writeFile(offersFile, offers().filter(x => x.id !== id));
       return json(res, 200, { ok: true });
