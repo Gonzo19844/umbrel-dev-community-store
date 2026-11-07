@@ -72,7 +72,7 @@ function loadCredentials() {
     credentials = { key: '', secret: '' };
   }
 }
-async function mrrGetWith(endpoint, query, auth) {
+async function mrrRequestWith(endpoint, method, params, auth) {
   if (!auth?.key || !auth?.secret) {
     const error = new Error('MRR_API_KEY und MRR_API_SECRET sind nicht konfiguriert.');
     error.code = 'MRR_NOT_CONFIGURED';
@@ -83,16 +83,23 @@ async function mrrGetWith(endpoint, query, auth) {
   const signature = crypto.createHmac('sha1', auth.secret)
     .update(auth.key + nonce + endpoint)
     .digest('hex');
+  const isRead = method === 'GET';
+  const form = new URLSearchParams();
+  for (const [key, value] of Object.entries(params || {})) form.set(key, String(value));
+  const query = isRead ? form.toString() : '';
   const url = MRR_BASE + endpoint + (query ? '?' + query : '');
   const response = await fetch(url, {
+    method,
     headers: {
       'x-api-key': auth.key,
       'x-api-nonce': nonce,
       'x-api-sign': signature,
       'accept': 'application/json',
-      'user-agent': 'HASHRENT-Umbrel/0.3.2'
+      ...(isRead ? {} : { 'content-type': 'application/x-www-form-urlencoded' }),
+      'user-agent': 'HASHRENT-Umbrel/0.4.0'
     },
-    signal: AbortSignal.timeout(12000)
+    ...(!isRead ? { body: form.toString() } : {}),
+    signal: AbortSignal.timeout(15000)
   });
   if (!response.ok) throw new Error('MiningRigRentals API antwortete mit HTTP ' + response.status);
   const payload = await response.json();
@@ -101,8 +108,15 @@ async function mrrGetWith(endpoint, query, auth) {
   }
   return payload.data;
 }
+async function mrrGetWith(endpoint, query, auth) {
+  const params = Object.fromEntries(new URLSearchParams(query || ''));
+  return mrrRequestWith(endpoint, 'GET', params, auth);
+}
 async function mrrGet(endpoint, query = '') {
   return mrrGetWith(endpoint, query, credentials);
+}
+async function mrrPut(endpoint, params) {
+  return mrrRequestWith(endpoint, 'PUT', params, credentials);
 }
 function normalizeRig(rig) {
   const algo = String(rig.type || '').toLowerCase();
@@ -197,7 +211,7 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const pathname = url.pathname;
-  if (pathname === '/health') return json(res, 200, { ok: true, app: 'HASHRENT', version: '0.3.2' });
+  if (pathname === '/health') return json(res, 200, { ok: true, app: 'HASHRENT', version: '0.4.0' });
   if (pathname === '/api/settings' && req.method === 'GET') {
     return json(res, 200, { configured: Boolean(credentials.key && credentials.secret), source: fs.existsSync(CONFIG_FILE) ? 'encrypted-file' : (credentials.key ? 'environment' : 'none') });
   }
@@ -215,6 +229,90 @@ const server = http.createServer(async (req, res) => {
     } catch (error) {
       const status = error instanceof SyntaxError ? 400 : 502;
       return json(res, status, { error: error.message || 'Einstellungen konnten nicht gespeichert werden.' });
+    }
+  }
+  if (pathname === '/api/account' && req.method === 'GET') {
+    try {
+      const [account, profiles] = await Promise.all([
+        mrrGet('/whoami'),
+        mrrGet('/account/profile', 'algo=sha256ab')
+      ]);
+      const list = Array.isArray(profiles) ? profiles : [];
+      const safeProfiles = list.filter(p => String(p.algo?.name || '').toLowerCase() === 'sha256ab')
+        .map(p => ({ id: String(p.id), name: String(p.name || ('Pool-Profil ' + p.id)), algorithm: 'SHA-256 ASICBoost' }));
+      return json(res, 200, {
+        authenticated: account?.authed === true,
+        permissions: { rent: String(account?.permissions?.rent || 'no').toLowerCase() === 'yes' },
+        profiles: safeProfiles
+      });
+    } catch (error) {
+      return json(res, error.code === 'MRR_NOT_CONFIGURED' ? 503 : 502, { error: error.message, code: error.code || 'MRR_ACCOUNT_ERROR' });
+    }
+  }
+  if (pathname === '/api/rentals' && req.method === 'GET') {
+    try {
+      const data = await mrrGet('/rental', 'type=renter&algo=sha256ab&history=false&limit=50');
+      const rows = Array.isArray(data) ? data : (Array.isArray(data?.rentals) ? data.rentals : []);
+      const safeRentals = rows.map(r => ({
+        id: String(r.id || r.rentalid || ''),
+        rigId: String(r.rig || r.rigid || ''),
+        name: String(r.rig_name || r.name || ('Rig #' + (r.rig || r.rigid || '?'))),
+        status: String(r.status || r.rental_status || 'active'),
+        start: r.start || r.time_start || null,
+        end: r.end || r.time_end || null,
+        hashrate: r.hashrate?.advertised?.nice || r.hashrate?.nice || null,
+        url: r.id ? 'https://www.miningrigrentals.com/rentals/' + encodeURIComponent(String(r.id)) : null
+      }));
+      return json(res, 200, { rentals: safeRentals });
+    } catch (error) {
+      return json(res, error.code === 'MRR_NOT_CONFIGURED' ? 503 : 502, { error: error.message, code: error.code || 'MRR_RENTALS_ERROR' });
+    }
+  }
+  if (pathname === '/api/rentals' && req.method === 'POST') {
+    if (!sameOrigin(req)) return json(res, 403, { error: 'Ungültige Herkunft der Anfrage.' });
+    if (!String(req.headers['content-type'] || '').includes('application/json')) return json(res, 415, { error: 'JSON wird erwartet.' });
+    try {
+      const body = await readJson(req);
+      if (body.confirm !== true) return json(res, 400, { error: 'Die Mietbestätigung fehlt.' });
+      const rigId = String(body.rigId || '');
+      const profileId = String(body.profileId || '');
+      const hours = Number(body.hours);
+      if (!/^\\d{1,12}$/.test(rigId) || !/^\\d{1,12}$/.test(profileId)) return json(res, 400, { error: 'Ungültige Rig- oder Profil-ID.' });
+      if (!Number.isInteger(hours) || hours < MIN_HOURS || hours > 720) return json(res, 400, { error: 'Mietdauer muss zwischen 3 und 720 ganzen Stunden liegen.' });
+      const [account, profiles, rawRig] = await Promise.all([
+        mrrGet('/whoami'),
+        mrrGet('/account/profile', 'algo=sha256ab'),
+        mrrGet('/rig/' + rigId)
+      ]);
+      if (String(account?.permissions?.rent || '').toLowerCase() !== 'yes') return json(res, 403, { error: 'Dein MRR-API-Key besitzt keine Mietberechtigung (rent).' });
+      const profileList = Array.isArray(profiles) ? profiles : [];
+      const profile = profileList.find(p => String(p.id) === profileId && String(p.algo?.name || '').toLowerCase() === 'sha256ab');
+      if (!profile) return json(res, 400, { error: 'Das ausgewählte Pool-Profil ist kein SHA-256-ASICBoost-Profil.' });
+      const rigRows = Array.isArray(rawRig) ? rawRig : [rawRig];
+      const rig = normalizeRig(rigRows[0] || {});
+      if (!rig || rig.id !== rigId) return json(res, 409, { error: 'Das ausgewählte Rig ist nicht mehr verfügbar oder kein SHA-256-ASICBoost-Rig.' });
+      if (hours < rig.minHours || (rig.maxHours && hours > rig.maxHours)) return json(res, 409, { error: 'Die Mietdauer liegt außerhalb des aktuellen Mietfensters dieses Rigs.' });
+      const priceType = String(rigRows[0].price?.type || rigRows[0].hashrate?.advertised?.type || 'th').toLowerCase();
+      const ratePrice = number(rigRows[0].price?.BTC?.price);
+      if (!(ratePrice > 0)) return json(res, 409, { error: 'Für dieses Rig ist aktuell kein BTC-Preis verfügbar.' });
+      const created = await mrrPut('/rental', {
+        rig: rigId, length: hours, profile: profileId, currency: 'BTC',
+        'rate[type]': priceType, 'rate[price]': ratePrice
+      });
+      if (created?.success === false || !(created?.id || created?.rentalid)) {
+        return json(res, 502, { error: created?.message || 'MRR hat keinen bestätigten Mietauftrag zurückgegeben.', details: created || null });
+      }
+      cache = { at: 0, rigs: null };
+      return json(res, 201, {
+        ok: true, rentalId: String(created.id || created.rentalid),
+        rigId, rigName: rig.name, hours, profileName: String(profile.name || ''),
+        hashratePH: rig.hashratePH,
+        mrrUrl: 'https://www.miningrigrentals.com/rentals/' + encodeURIComponent(String(created.id || created.rentalid)),
+        message: 'MRR hat den Mietauftrag bestätigt.'
+      });
+    } catch (error) {
+      const status = error instanceof SyntaxError ? 400 : (error.code === 'MRR_NOT_CONFIGURED' ? 503 : 502);
+      return json(res, status, { error: error.message || 'Mietauftrag konnte nicht erstellt werden.', code: error.code || 'RENTAL_CREATE_ERROR' });
     }
   }
   if (pathname === '/api/market') {
@@ -254,4 +352,4 @@ const server = http.createServer(async (req, res) => {
     res.end(data);
   });
 });
-server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.3.2 listening on ' + PORT));
+server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.4.0 listening on ' + PORT));
