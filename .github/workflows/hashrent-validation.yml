@@ -2,7 +2,7 @@ name: HASHRENT 0.3.0 validation
 on:
   push:
     branches:
-      - feature/hashrent-live-sha256ab-market
+      - main
     paths:
       - "willitmod-dev-hashrent-marketplace/**"
       - ".github/workflows/hashrent-validation.yml"
