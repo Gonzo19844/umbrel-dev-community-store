@@ -6,18 +6,19 @@ const crypto = require('crypto');
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const DATA_DIR = process.env.DATA_DIR || '/app/data';
+const CONFIG_FILE = path.join(DATA_DIR, 'mrr-credentials.enc');
+const KEY_FILE = path.join(DATA_DIR, 'config.key');
 const MRR_BASE = (process.env.MRR_API_BASE || 'https://www.miningrigrentals.com/api/v2').replace(/\/$/, '');
-const MRR_KEY = process.env.MRR_API_KEY || '';
-const MRR_SECRET = process.env.MRR_API_SECRET || '';
 const CACHE_MS = Math.max(15000, Number(process.env.MARKET_CACHE_MS || 60000));
 const MARKUP = 0.05;
 const MIN_HOURS = 3;
 const MAX_PH = 100;
+let credentials = { key: process.env.MRR_API_KEY || '', secret: process.env.MRR_API_SECRET || '' };
 let cache = { at: 0, rigs: null };
 let lastNonce = 0;
 
 function json(res, status, body) {
-  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
   res.end(JSON.stringify(body));
 }
 function contentType(file) {
@@ -33,34 +34,75 @@ function number(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
 }
-async function mrrGet(endpoint, query = '') {
-  if (!MRR_KEY || !MRR_SECRET) {
+function safeWrite(file, data) {
+  const temp = file + '.tmp';
+  fs.writeFileSync(temp, data, { mode: 0o600 });
+  fs.renameSync(temp, file);
+  try { fs.chmodSync(file, 0o600); } catch (_) {}
+}
+function encryptionKey() {
+  if (!fs.existsSync(KEY_FILE)) safeWrite(KEY_FILE, crypto.randomBytes(32));
+  const key = fs.readFileSync(KEY_FILE);
+  if (key.length !== 32) throw new Error('HASHRENT-Konfigurationsschlüssel ist ungültig. Bitte KEY_FILE sichern/wiederherstellen.');
+  return key;
+}
+function saveCredentials(next) {
+  const key = encryptionKey();
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  const encrypted = Buffer.concat([cipher.update(JSON.stringify(next), 'utf8'), cipher.final()]);
+  const record = JSON.stringify({ version: 1, iv: iv.toString('base64'), tag: cipher.getAuthTag().toString('base64'), data: encrypted.toString('base64') });
+  safeWrite(CONFIG_FILE, record);
+  credentials = next;
+  cache = { at: 0, rigs: null };
+}
+function loadCredentials() {
+  if (!fs.existsSync(CONFIG_FILE)) return;
+  try {
+    const record = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+    if (record.version !== 1) throw new Error('Unbekannte Konfigurationsversion.');
+    const decipher = crypto.createDecipheriv('aes-256-gcm', encryptionKey(), Buffer.from(record.iv, 'base64'));
+    decipher.setAuthTag(Buffer.from(record.tag, 'base64'));
+    const plain = Buffer.concat([decipher.update(Buffer.from(record.data, 'base64')), decipher.final()]);
+    const saved = JSON.parse(plain.toString('utf8'));
+    if (typeof saved.key !== 'string' || typeof saved.secret !== 'string') throw new Error('Ungültige Zugangsdaten.');
+    credentials = saved;
+  } catch (error) {
+    console.error('HASHRENT konnte die gespeicherten MRR-Zugangsdaten nicht laden:', error.message);
+    credentials = { key: '', secret: '' };
+  }
+}
+async function mrrGetWith(endpoint, query, auth) {
+  if (!auth?.key || !auth?.secret) {
     const error = new Error('MRR_API_KEY und MRR_API_SECRET sind nicht konfiguriert.');
     error.code = 'MRR_NOT_CONFIGURED';
     throw error;
   }
   const nonce = String(Math.max(Date.now(), lastNonce + 1));
   lastNonce = Number(nonce);
-  const signature = crypto.createHmac('sha1', MRR_SECRET)
-    .update(MRR_KEY + nonce + endpoint)
+  const signature = crypto.createHmac('sha1', auth.secret)
+    .update(auth.key + nonce + endpoint)
     .digest('hex');
   const url = MRR_BASE + endpoint + (query ? '?' + query : '');
   const response = await fetch(url, {
     headers: {
-      'x-api-key': MRR_KEY,
+      'x-api-key': auth.key,
       'x-api-nonce': nonce,
       'x-api-sign': signature,
       'accept': 'application/json',
-      'user-agent': 'HASHRENT-Umbrel/0.2.0'
+      'user-agent': 'HASHRENT-Umbrel/0.3.0'
     },
     signal: AbortSignal.timeout(12000)
   });
   if (!response.ok) throw new Error('MiningRigRentals API antwortete mit HTTP ' + response.status);
   const payload = await response.json();
   if (!payload || payload.success !== true) {
-    throw new Error(payload?.data?.message || 'Ungültige Antwort der MiningRigRentals API.');
+    throw new Error(payload?.data?.message || 'MiningRigRentals hat die Zugangsdaten oder Anfrage abgelehnt.');
   }
   return payload.data;
+}
+async function mrrGet(endpoint, query = '') {
+  return mrrGetWith(endpoint, query, credentials);
 }
 function normalizeRig(rig) {
   const algo = String(rig.type || '').toLowerCase();
@@ -108,7 +150,6 @@ function makeQuote(rigs, targetPH, hours) {
     const error = new Error('Mietdauer muss mindestens 3 Stunden betragen.');
     error.status = 400; throw error;
   }
-
   let remaining = targetPH;
   let totalBase = 0;
   let totalCustomer = 0;
@@ -117,7 +158,6 @@ function makeQuote(rigs, targetPH, hours) {
     if (remaining <= 0) break;
     if (rig.maxHours && hours > rig.maxHours) continue;
     if (hours < rig.minHours) continue;
-    // MRR rents complete rigs; never price a fractional rig as if it could be split.
     const allocatedPH = rig.hashratePH;
     const base = allocatedPH * rig.baseBTCPerPHDay * hours / 24;
     const customer = base * (1 + MARKUP);
@@ -138,13 +178,48 @@ function makeQuote(rigs, targetPH, hours) {
     note: 'Unverbindliche Live-Kalkulation. Es wurde keine Miete ausgelöst.'
   };
 }
+async function readJson(req) {
+  let body = '';
+  for await (const chunk of req) {
+    body += chunk;
+    if (body.length > 16384) throw new Error('Anfrage ist zu groß.');
+  }
+  return JSON.parse(body || '{}');
+}
+function sameOrigin(req) {
+  const origin = req.headers.origin;
+  if (!origin) return true;
+  try { return new URL(origin).host === req.headers.host; } catch (_) { return false; }
+}
 
+loadCredentials();
+fs.mkdirSync(DATA_DIR, { recursive: true });
 const server = http.createServer(async (req, res) => {
-  const pathname = new URL(req.url, 'http://localhost').pathname;
-  if (pathname === '/health') return json(res, 200, { ok: true, app: 'HASHRENT', version: '0.2.0' });
+  const url = new URL(req.url, 'http://localhost');
+  const pathname = url.pathname;
+  if (pathname === '/health') return json(res, 200, { ok: true, app: 'HASHRENT', version: '0.3.0' });
+  if (pathname === '/api/settings' && req.method === 'GET') {
+    return json(res, 200, { configured: Boolean(credentials.key && credentials.secret), source: fs.existsSync(CONFIG_FILE) ? 'encrypted-file' : (credentials.key ? 'environment' : 'none') });
+  }
+  if (pathname === '/api/settings' && req.method === 'POST') {
+    if (!sameOrigin(req)) return json(res, 403, { error: 'Ungültige Herkunft der Anfrage.' });
+    if (!String(req.headers['content-type'] || '').includes('application/json')) return json(res, 415, { error: 'JSON wird erwartet.' });
+    try {
+      const body = await readJson(req);
+      const key = String(body.key || '').trim();
+      const secret = String(body.secret || '').trim();
+      if (!key || !secret || key.length > 512 || secret.length > 512) return json(res, 400, { error: 'Bitte API-Key und API-Secret vollständig eingeben.' });
+      await mrrGetWith('/rig', 'type=sha256ab&currency=BTC&count=1&offset=0', { key, secret });
+      saveCredentials({ key, secret });
+      return json(res, 200, { ok: true, configured: true, message: 'Verbindung erfolgreich. Zugangsdaten verschlüsselt gespeichert.' });
+    } catch (error) {
+      const status = error instanceof SyntaxError ? 400 : 502;
+      return json(res, status, { error: error.message || 'Einstellungen konnten nicht gespeichert werden.' });
+    }
+  }
   if (pathname === '/api/market') {
     try {
-      const rigs = await getMarket(new URL(req.url, 'http://localhost').searchParams.get('refresh') === '1');
+      const rigs = await getMarket(url.searchParams.get('refresh') === '1');
       return json(res, 200, {
         algorithm: 'SHA-256 ASICBoost', source: 'MiningRigRentals API v2',
         updatedAt: new Date(cache.at).toISOString(), cacheSeconds: Math.round(CACHE_MS / 1000),
@@ -159,7 +234,6 @@ const server = http.createServer(async (req, res) => {
   }
   if (pathname === '/api/quote') {
     try {
-      const url = new URL(req.url, 'http://localhost');
       const targetPH = Number(url.searchParams.get('ph'));
       const hours = Number(url.searchParams.get('hours'));
       const rigs = await getMarket();
@@ -169,16 +243,15 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  const requested = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
+  const requested = pathname === '/' ? 'index.html' : (pathname === '/settings' ? 'settings.html' : pathname.replace(/^\/+/, ''));
   const file = path.resolve(PUBLIC_DIR, requested);
   if (!file.startsWith(PUBLIC_DIR + path.sep)) {
     res.writeHead(403); return res.end('Forbidden');
   }
   fs.readFile(file, (err, data) => {
     if (err) { res.writeHead(404); return res.end('Not found'); }
-    res.writeHead(200, { 'content-type': contentType(file), 'cache-control': 'no-store' });
+    res.writeHead(200, { 'content-type': contentType(file), 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
     res.end(data);
   });
 });
-fs.mkdirSync(DATA_DIR, { recursive: true });
-server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.2.0 listening on ' + PORT));
+server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.3.0 listening on ' + PORT));
