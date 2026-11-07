@@ -20,7 +20,20 @@ function createCommerce(deps) {
     try { fs.chmodSync(file, 0o600); } catch (_) {}
   }
   function admin() { return readFile(adminFile, null); }
-  function offers() { return readFile(offersFile, []); }
+  function offers() {
+    const saved = readFile(offersFile, []);
+    if (saved.length) return saved;
+    const now = new Date().toISOString();
+    const defaults = [
+      { id: 'starter-5th-100th', name: 'HASHRENT Starter', description: 'SHA-256 ASICBoost von 5 bis 100 TH/s.', minPH: 0.005, maxPH: 0.1, minHours: 3, maxHours: 168, enabled: true, updatedAt: now },
+      { id: 'pro-100th-1ph', name: 'HASHRENT Pro', description: 'SHA-256 ASICBoost von 100 TH/s bis 1 PH/s.', minPH: 0.1, maxPH: 1, minHours: 3, maxHours: 168, enabled: true, updatedAt: now },
+      { id: 'power-1-10ph', name: 'HASHRENT Power', description: 'SHA-256 ASICBoost von 1 bis 10 PH/s.', minPH: 1, maxPH: 10, minHours: 3, maxHours: 168, enabled: true, updatedAt: now },
+      { id: 'industrial-10-50ph', name: 'HASHRENT Industrial', description: 'SHA-256 ASICBoost von 10 bis 50 PH/s.', minPH: 10, maxPH: 50, minHours: 3, maxHours: 168, enabled: true, updatedAt: now },
+      { id: 'enterprise-50-100ph', name: 'HASHRENT Enterprise', description: 'SHA-256 ASICBoost von 50 bis 100 PH/s.', minPH: 50, maxPH: 100, minHours: 3, maxHours: 168, enabled: true, updatedAt: now }
+    ];
+    writeFile(offersFile, defaults);
+    return defaults;
+  }
   function orders() { return readFile(ordersFile, []); }
   function saveOrders(rows) { writeFile(ordersFile, rows); }
   function token() { return crypto.randomBytes(24).toString('hex'); }
@@ -110,6 +123,9 @@ function createCommerce(deps) {
         const rentalId = String(created?.id || created?.rentalid || '');
         if (!rentalId) throw new Error('MRR hat für Rig ' + selected.id + ' keine bestätigte Miet-ID zurückgegeben.');
         createdIds.push(rentalId);
+        const pool = current.privatePool || {};
+        const poolResult = await mrrPut('/rental/' + encodeURIComponent(rentalId) + '/pool/0', { host: String(pool.host || ''), port: String(pool.port || ''), user: String(pool.user || ''), pass: String(pool.pass || 'x') });
+        if (poolResult?.success === false) throw new Error('Kunden-Pool konnte für Rental ' + rentalId + ' nicht gesetzt werden.');
         const latest = orders();
         const row = latest.find(x => x.id === order.id);
         if (row) { row.privateRentalIds = createdIds; row.updatedAt = new Date().toISOString(); saveOrders(latest); }
@@ -217,7 +233,7 @@ function createCommerce(deps) {
         const name = String(body.name || '').trim();
         const minPH = Number(body.minPH), maxPH = Number(body.maxPH);
         const minHours = Number(body.minHours), maxHours = Number(body.maxHours);
-        if (!name || name.length > 64 || !Number.isFinite(minPH) || !Number.isFinite(maxPH) || minPH < 1 || maxPH > 100 || minPH > maxPH || minHours < 3 || maxHours > 720 || minHours > maxHours) return json(res, 400, { error: 'Bitte Name, Hashrate 1–100 PH/s und Mietdauer 3–720 Stunden korrekt angeben.' });
+        if (!name || name.length > 64 || !Number.isFinite(minPH) || !Number.isFinite(maxPH) || minPH < 0.005 || maxPH > 100 || minPH > maxPH || minHours < 3 || maxHours > 720 || minHours > maxHours) return json(res, 400, { error: 'Bitte Name, Hashrate 5 TH/s–100 PH/s und Mietdauer 3–720 Stunden korrekt angeben.' });
         const rows = offers();
         const offer = { id: String(body.id || token().slice(0, 12)), name, description: String(body.description || '').slice(0, 300), minPH, maxPH, minHours, maxHours, enabled: body.enabled !== false, updatedAt: new Date().toISOString() };
         const index = rows.findIndex(x => x.id === offer.id);
@@ -239,7 +255,10 @@ function createCommerce(deps) {
         const offer = offers().find(x => x.id === String(body.offerId) && x.enabled === true);
         if (!offer) return json(res, 404, { error: 'Dieses HASHRENT-Angebot ist nicht verfügbar.' });
         const targetPH = Number(body.targetPH), hours = Number(body.hours);
+        const poolHost = String(body.poolHost || '').trim().replace(/^stratum\\+tcp:\\/\\//i, '').split(':')[0];
+        const poolPort = Number(body.poolPort), poolUser = String(body.poolUser || '').trim(), poolPass = String(body.poolPass || 'x').trim();
         const currency = String(body.currency || '').toLowerCase();
+        if (!/^[a-z0-9.-]{1,253}$/i.test(poolHost) || !Number.isInteger(poolPort) || poolPort < 1 || poolPort > 65535 || !poolUser || poolUser.length > 200 || poolPass.length > 100) return json(res, 400, { error: 'Bitte Pool-Server, gültigen Port und Workername korrekt eingeben.' });
         if (!['btc','ltc','doge','bch'].includes(currency)) return json(res, 400, { error: 'Bitte BTC, LTC, DOGE oder BCH auswählen.' });
         if (!Number.isFinite(targetPH) || targetPH < offer.minPH || targetPH > offer.maxPH || !Number.isInteger(hours) || hours < offer.minHours || hours > offer.maxHours) return json(res, 400, { error: 'Hashrate oder Mietdauer liegt außerhalb dieses Angebots.' });
         const cfg = getCredentials();
@@ -261,7 +280,7 @@ function createCommerce(deps) {
         }, cfg.nowPaymentsKey);
         if (!invoice.invoice_url || !invoice.id) throw new Error('NOWPayments hat keine gültige Rechnungs-URL zurückgegeben.');
         const rows = orders();
-        rows.push({ id, accessToken, offerName: offer.name, targetPH, hours, currency, priceEUR: Number(priceEUR.toFixed(2)), customerBTC, baseBTC: Number(quote.baseBTC), markupBTC: Number(customerBTC - Number(quote.baseBTC)), privateRigs: quote.rigs, paymentInvoiceId: String(invoice.id), paymentStatus: 'waiting', status: 'pending_payment', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+        rows.push({ id, accessToken, offerName: offer.name, targetPH, hours, currency, privatePool: { host: poolHost, port: poolPort, user: poolUser, pass: poolPass }, priceEUR: Number(priceEUR.toFixed(2)), customerBTC, baseBTC: Number(quote.baseBTC), markupBTC: Number(customerBTC - Number(quote.baseBTC)), privateRigs: quote.rigs, paymentInvoiceId: String(invoice.id), paymentStatus: 'waiting', status: 'pending_payment', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
         saveOrders(rows);
         return json(res, 201, { ok: true, orderId: id, statusToken: accessToken, invoiceUrl: invoice.invoice_url, priceEUR: Number(priceEUR.toFixed(2)), currency });
       } catch (error) { return json(res, 502, { error: error.message || 'Checkout konnte nicht erstellt werden.' }); }
@@ -291,7 +310,7 @@ function createCommerce(deps) {
       return json(res, 200, { orderId: order.id, offerName: order.offerName, targetPH: order.targetPH, hours: order.hours, priceEUR: order.priceEUR, paymentStatus: order.paymentStatus, status: order.status, createdAt: order.createdAt });
     }
     if (pathname === '/api/admin/orders' && req.method === 'GET') {
-      return json(res, 200, { orders: orders().map(x => ({ ...x, accessToken: undefined, privateRigs: x.privateRigs?.map(r => ({ id: r.id, allocatedPH: r.allocatedPH, baseBTC: r.baseBTC })), privateRentalIds: x.privateRentalIds || [] })) });
+      return json(res, 200, { orders: orders().map(x => ({ ...x, accessToken: undefined, privateRigs: x.privateRigs?.map(r => ({ id: r.id, allocatedPH: r.allocatedPH, baseBTC: r.baseBTC })), privatePool: undefined, privateRentalIds: x.privateRentalIds || [] })) });
     }
     return false;
   };
