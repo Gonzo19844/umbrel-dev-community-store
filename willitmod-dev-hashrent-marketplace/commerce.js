@@ -94,12 +94,12 @@ function createCommerce(deps) {
         const rig = Array.isArray(raw) ? raw[0] : raw;
         if (!rig || String(rig.type || '').toLowerCase() !== 'sha256ab' ||
             String(rig.available_status || rig.status?.status || '').toLowerCase() !== 'available' ||
-            rig.online === false || rig.status?.rented === true) {
+            rig.online === false || rig.status?.online === false || rig.status?.rented === true) {
           throw new Error('Ein benötigtes SHA-256-ASICBoost-Rig ist inzwischen nicht mehr verfügbar.');
         }
         const priceType = String(rig.price?.type || rig.hashrate?.advertised?.type || 'th').toLowerCase();
         const ratePrice = Number(rig.price?.BTC?.price || 0);
-        if (!(ratePrice > 0) || Number(current.hours) < Math.max(3, Number(rig.minhours || 3)) ||
+        if (!(ratePrice > 0) || rig.price?.BTC?.enabled === false || Number(current.hours) < Math.max(3, Number(rig.minhours || 3)) ||
             (Number(rig.maxhours) > 0 && Number(current.hours) > Number(rig.maxhours))) {
           throw new Error('Preis oder Mietfenster eines benötigten Rigs hat sich geändert.');
         }
