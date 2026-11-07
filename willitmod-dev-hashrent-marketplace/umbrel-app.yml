@@ -4,7 +4,7 @@ name: HASHRENT
 tagline: SHA-256 ASICBoost Marketplace
 icon: https://raw.githubusercontent.com/Gonzo19844/umbrel-dev-community-store/main/willitmod-dev-hashrent-marketplace/icon.svg
 category: bitcoin
-version: "0.5.0"
+version: "0.5.1"
 port: 3000
 description: >-
   HASHRENT-eigener SHA-256 ASICBoost Marketplace mit Admin-Angebotsverwaltung,
@@ -17,9 +17,9 @@ repo: https://github.com/Gonzo19844/umbrel-dev-community-store
 support: https://github.com/Gonzo19844/umbrel-dev-community-store/issues
 gallery: []
 releaseNotes: >-
-  HASHRENT 0.5.0 bringt den eigenen HASHRENT-Shop mit privaten MRR-Beschaffungsrouten,
-  Admin-Angebotsverwaltung, verschlüsselten NOWPayments-Zugangsdaten,
-  BTC/LTC/DOGE/BCH-Checkout, signierter IPN-Prüfung und Auftragsstatus.
+  HASHRENT 0.5.1 ist ein Versions- und Bereitstellungsupdate auf Basis von 0.5.0.
+  Enthält den aktuellen Shop, die Admin-Angebotsverwaltung, verschlüsselte
+  NOWPayments-Zugangsdaten, BTC/LTC/DOGE/BCH-Checkout und MRR-Beschaffung.
 dependencies: []
 path: ""
 defaultUsername: ""
