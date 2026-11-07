@@ -5,6 +5,7 @@ COPY package.json ./
 RUN npm install --omit=dev
 COPY server.js ./
 COPY public ./public
+RUN node --check server.js && node --check public/app.js
 RUN mkdir -p /app/data && chown -R node:node /app
 USER node
 EXPOSE 3000
