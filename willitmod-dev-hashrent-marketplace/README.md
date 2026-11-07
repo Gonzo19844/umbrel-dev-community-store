@@ -8,7 +8,7 @@ HASHRENT 0.2.0 ist ein SHA-256-ASICBoost-Marktplatz-Prototyp mit Live-Marktdaten
 - Serverseitiger Abruf und 60-Sekunden-Cache für Rig-Angebote.
 - HMAC-SHA1-Authentifizierung der MRR-API v2; API-Key und Secret bleiben serverseitig.
 - Angebotsübersicht mit Hashrate, BTC-Preis, Region und Mietfenster.
-- Preisrechner für 1–100 PH/s und 3–720 Stunden.
+- Preisrechner für 1–100 PH/s und mindestens 3 Stunden.
 - Automatische, preisorientierte Kombination verfügbarer Rigs.
 - Fester HASHRENT-Aufschlag von 5 %.
 - Keine echten Mietaufträge, Poolprofile, Wallet-Operationen oder Zahlungen.
