@@ -3,6 +3,15 @@ let marketReady = false;
 const btc = value => Number(value || 0).toFixed(8) + ' BTC';
 const ph = value => Number(value || 0).toFixed(3) + ' PH/s';
 
+async function loadSettingsStatus() {
+  try {
+    const response = await fetch('/api/settings');
+    const data = await response.json();
+    const link = document.querySelector('.topnav a');
+    if (link && data.configured) link.textContent = 'API-Einstellungen · verbunden';
+  } catch (_) {}
+}
+
 function showMessage(id, message, kind = '') {
   const node = $(id); node.textContent = message; node.className = 'notice ' + kind;
 }
@@ -69,3 +78,4 @@ async function calculate() {
 $('refresh').addEventListener('click', () => loadMarket(true));
 $('calculate').addEventListener('click', calculate);
 loadMarket();
+loadSettingsStatus();
