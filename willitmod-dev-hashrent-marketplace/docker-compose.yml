@@ -15,7 +15,7 @@ services:
     volumes:
       - ${APP_DATA_DIR}/data:/data
   server:
-    image: ghcr.io/gonzo19844/hashrent:0.3.0
+    image: ghcr.io/gonzo19844/hashrent:0.3.2
     init: true
     restart: on-failure
     stop_grace_period: 30s
