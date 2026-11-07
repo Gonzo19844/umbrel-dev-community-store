@@ -1,7 +1,7 @@
 manifestVersion: 1
 id: willitmod-dev-hashrent-marketplace
 name: HASHRENT
-tagline: SHA-256 Hashrate Marketplace
+tagline: SHA-256 ASICBoost Marketplace
 icon: https://raw.githubusercontent.com/Gonzo19844/umbrel-dev-community-store/main/willitmod-dev-hashrent-marketplace/icon.svg
 category: bitcoin
 version: "0.2.0"
