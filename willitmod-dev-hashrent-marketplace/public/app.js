@@ -41,6 +41,7 @@ async function loadOffers() {
     $('offers').innerHTML = offers.length
       ? offers.map((offer) => `
           <article class="offer">
+            <img class="offer-image" src="${esc(offer.imageUrl || '/images/miner-power.svg')}" alt="ASIC Miner für ${esc(offer.name)}" loading="lazy">
             <div class="offer-top">
               <span class="chip">SHA-256 ASICBoost</span>
               <span class="status">${formatHash(offer.minPH)}–${formatHash(offer.maxPH)}</span>
