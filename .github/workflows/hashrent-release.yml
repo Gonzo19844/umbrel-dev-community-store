@@ -9,6 +9,11 @@ on:
         default: "0.5.0"
         type: string
   push:
+    branches:
+      - main
+    paths:
+      - "willitmod-dev-hashrent-marketplace/**"
+      - ".github/workflows/hashrent-release.yml"
     tags:
       - "hashrent-v*"
 
@@ -35,8 +40,10 @@ jobs:
         id: version
         shell: bash
         run: |
-          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+          if [[ "${GITHUB_EVENT_NAME}" == "push" && "${GITHUB_REF_TYPE}" == "tag" ]]; then
             VERSION="${GITHUB_REF_NAME#hashrent-v}"
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            VERSION="$(node -p "require('./willitmod-dev-hashrent-marketplace/package.json').version")"
           else
             VERSION="${{ inputs.version }}"
           fi
