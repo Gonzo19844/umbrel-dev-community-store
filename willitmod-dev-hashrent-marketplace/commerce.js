@@ -7,6 +7,7 @@ function createCommerce(deps) {
   const adminFile = path.join(DATA_DIR, 'admin.json');
   const offersFile = path.join(DATA_DIR, 'offers.json');
   const ordersFile = path.join(DATA_DIR, 'orders.json');
+  const poolKeyFile = path.join(DATA_DIR, 'pool-data.key');
   const sessions = new Map();
   let busyOrders = new Set();
 
@@ -37,6 +38,23 @@ function createCommerce(deps) {
   function orders() { return readFile(ordersFile, []); }
   function saveOrders(rows) { writeFile(ordersFile, rows); }
   function token() { return crypto.randomBytes(24).toString('hex'); }
+  function poolKey() {
+    if (!fs.existsSync(poolKeyFile)) fs.writeFileSync(poolKeyFile, crypto.randomBytes(32), { mode: 0o600, flag: 'wx' });
+    const key = fs.readFileSync(poolKeyFile);
+    if (key.length !== 32) throw new Error('Pool-Verschlüsselungsschlüssel ist ungültig.');
+    return key;
+  }
+  function sealPool(value) {
+    const iv = crypto.randomBytes(12), cipher = crypto.createCipheriv('aes-256-gcm', poolKey(), iv);
+    const data = Buffer.concat([cipher.update(JSON.stringify(value), 'utf8'), cipher.final()]);
+    return { iv: iv.toString('base64'), tag: cipher.getAuthTag().toString('base64'), data: data.toString('base64') };
+  }
+  function openPool(record) {
+    if (!record) throw new Error('Verschlüsselte Kunden-Pooldaten fehlen.');
+    const decipher = crypto.createDecipheriv('aes-256-gcm', poolKey(), Buffer.from(record.iv, 'base64'));
+    decipher.setAuthTag(Buffer.from(record.tag, 'base64'));
+    return JSON.parse(Buffer.concat([decipher.update(Buffer.from(record.data, 'base64')), decipher.final()]).toString('utf8'));
+  }
   function cookie(req) {
     const raw = String(req.headers.cookie || '');
     const match = raw.match(/(?:^|;\s*)hashrent_admin=([a-f0-9]{48})/);
@@ -123,7 +141,7 @@ function createCommerce(deps) {
         const rentalId = String(created?.id || created?.rentalid || '');
         if (!rentalId) throw new Error('MRR hat für Rig ' + selected.id + ' keine bestätigte Miet-ID zurückgegeben.');
         createdIds.push(rentalId);
-        const pool = current.privatePool || {};
+        const pool = openPool(current.privatePoolEncrypted);
         const poolResult = await mrrPut('/rental/' + encodeURIComponent(rentalId) + '/pool/0', { host: String(pool.host || ''), port: String(pool.port || ''), user: String(pool.user || ''), pass: String(pool.pass || 'x') });
         if (poolResult?.success === false) throw new Error('Kunden-Pool konnte für Rental ' + rentalId + ' nicht gesetzt werden.');
         const latest = orders();
@@ -134,6 +152,7 @@ function createCommerce(deps) {
       const row = latest.find(x => x.id === order.id);
       if (row) {
         row.status = 'active';
+        delete row.privatePoolEncrypted;
         row.privateRentalIds = createdIds;
         row.completedAt = new Date().toISOString();
         row.updatedAt = row.completedAt;
@@ -255,7 +274,7 @@ function createCommerce(deps) {
         const offer = offers().find(x => x.id === String(body.offerId) && x.enabled === true);
         if (!offer) return json(res, 404, { error: 'Dieses HASHRENT-Angebot ist nicht verfügbar.' });
         const targetPH = Number(body.targetPH), hours = Number(body.hours);
-        const poolHost = String(body.poolHost || '').trim().replace(/^stratum\\+tcp:\\/\\//i, '').split(':')[0];
+        const poolHost = String(body.poolHost || '').trim().replace(/^stratum\+tcp:\/\//i, '').split(':')[0];
         const poolPort = Number(body.poolPort), poolUser = String(body.poolUser || '').trim(), poolPass = String(body.poolPass || 'x').trim();
         const currency = String(body.currency || '').toLowerCase();
         if (!/^[a-z0-9.-]{1,253}$/i.test(poolHost) || !Number.isInteger(poolPort) || poolPort < 1 || poolPort > 65535 || !poolUser || poolUser.length > 200 || poolPass.length > 100) return json(res, 400, { error: 'Bitte Pool-Server, gültigen Port und Workername korrekt eingeben.' });
@@ -280,7 +299,7 @@ function createCommerce(deps) {
         }, cfg.nowPaymentsKey);
         if (!invoice.invoice_url || !invoice.id) throw new Error('NOWPayments hat keine gültige Rechnungs-URL zurückgegeben.');
         const rows = orders();
-        rows.push({ id, accessToken, offerName: offer.name, targetPH, hours, currency, privatePool: { host: poolHost, port: poolPort, user: poolUser, pass: poolPass }, priceEUR: Number(priceEUR.toFixed(2)), customerBTC, baseBTC: Number(quote.baseBTC), markupBTC: Number(customerBTC - Number(quote.baseBTC)), privateRigs: quote.rigs, paymentInvoiceId: String(invoice.id), paymentStatus: 'waiting', status: 'pending_payment', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+        rows.push({ id, accessToken, offerName: offer.name, targetPH, hours, currency, privatePoolEncrypted: sealPool({ host: poolHost, port: poolPort, user: poolUser, pass: poolPass }), priceEUR: Number(priceEUR.toFixed(2)), customerBTC, baseBTC: Number(quote.baseBTC), markupBTC: Number(customerBTC - Number(quote.baseBTC)), privateRigs: quote.rigs, paymentInvoiceId: String(invoice.id), paymentStatus: 'waiting', status: 'pending_payment', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
         saveOrders(rows);
         return json(res, 201, { ok: true, orderId: id, statusToken: accessToken, invoiceUrl: invoice.invoice_url, priceEUR: Number(priceEUR.toFixed(2)), currency });
       } catch (error) { return json(res, 502, { error: error.message || 'Checkout konnte nicht erstellt werden.' }); }
@@ -310,7 +329,7 @@ function createCommerce(deps) {
       return json(res, 200, { orderId: order.id, offerName: order.offerName, targetPH: order.targetPH, hours: order.hours, priceEUR: order.priceEUR, paymentStatus: order.paymentStatus, status: order.status, createdAt: order.createdAt });
     }
     if (pathname === '/api/admin/orders' && req.method === 'GET') {
-      return json(res, 200, { orders: orders().map(x => ({ ...x, accessToken: undefined, privateRigs: x.privateRigs?.map(r => ({ id: r.id, allocatedPH: r.allocatedPH, baseBTC: r.baseBTC })), privatePool: undefined, privateRentalIds: x.privateRentalIds || [] })) });
+      return json(res, 200, { orders: orders().map(x => ({ ...x, accessToken: undefined, privateRigs: x.privateRigs?.map(r => ({ id: r.id, allocatedPH: r.allocatedPH, baseBTC: r.baseBTC })), privatePool: undefined, privatePoolEncrypted: undefined, privateRentalIds: x.privateRentalIds || [] })) });
     }
     return false;
   };
