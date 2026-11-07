@@ -47,7 +47,7 @@ async function calculate() {
   const target = Number($('hashrate').value);
   const hours = Number($('hours').value);
   if (!Number.isFinite(target) || target < 1 || target > 100) return showMessage('quote-message', 'Bitte eine Hashrate zwischen 1 und 100 PH/s eingeben.', 'warning');
-  if (!Number.isInteger(hours) || hours < 3 || hours > 720) return showMessage('quote-message', 'Bitte eine Mietdauer zwischen 3 und 720 ganzen Stunden eingeben.', 'warning');
+  if (!Number.isInteger(hours) || hours < 3) return showMessage('quote-message', 'Bitte mindestens 3 ganze Mietstunden eingeben.', 'warning');
   $('calculate').disabled = true;
   showMessage('quote-message', 'Passende Rigs werden kombiniert …');
   $('quote-result').hidden = true;
