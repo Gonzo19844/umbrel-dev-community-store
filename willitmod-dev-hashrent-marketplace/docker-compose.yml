@@ -5,12 +5,15 @@ services:
       APP_HOST: willitmod-dev-hashrent-marketplace_server_1
       APP_PORT: 3000
   server:
-    image: ghcr.io/gonzo19844/hashrent:0.1.0
+    image: ghcr.io/gonzo19844/hashrent:0.2.0
     init: true
     restart: on-failure
     stop_grace_period: 30s
     environment:
       PORT: "3000"
       DATA_DIR: /app/data
+      MRR_API_BASE: "\${MRR_API_BASE:-https://www.miningrigrentals.com/api/v2}"
+      MRR_API_KEY: "\${MRR_API_KEY:-}"
+      MRR_API_SECRET: "\${MRR_API_SECRET:-}"
     volumes:
-      - ${APP_DATA_DIR}/data:/app/data
+      - \${APP_DATA_DIR}/data:/app/data
