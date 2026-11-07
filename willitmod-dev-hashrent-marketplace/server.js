@@ -90,7 +90,7 @@ async function mrrGetWith(endpoint, query, auth) {
       'x-api-nonce': nonce,
       'x-api-sign': signature,
       'accept': 'application/json',
-      'user-agent': 'HASHRENT-Umbrel/0.3.0'
+      'user-agent': 'HASHRENT-Umbrel/0.3.2'
     },
     signal: AbortSignal.timeout(12000)
   });
@@ -197,7 +197,7 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const pathname = url.pathname;
-  if (pathname === '/health') return json(res, 200, { ok: true, app: 'HASHRENT', version: '0.3.0' });
+  if (pathname === '/health') return json(res, 200, { ok: true, app: 'HASHRENT', version: '0.3.2' });
   if (pathname === '/api/settings' && req.method === 'GET') {
     return json(res, 200, { configured: Boolean(credentials.key && credentials.secret), source: fs.existsSync(CONFIG_FILE) ? 'encrypted-file' : (credentials.key ? 'environment' : 'none') });
   }
@@ -254,4 +254,4 @@ const server = http.createServer(async (req, res) => {
     res.end(data);
   });
 });
-server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.3.0 listening on ' + PORT));
+server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.3.2 listening on ' + PORT));
