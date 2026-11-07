@@ -15,7 +15,7 @@ HASHRENT 0.2.0 ist ein SHA-256-ASICBoost-Marktplatz-Prototyp mit Live-Marktdaten
 
 ## MRR API einrichten
 
-Die MRR API v2 dokumentiert HMAC-signierte Requests und den Endpunkt `GET /rig`. HASHRENT fragt `/rig?type=sha256ab&currency=BTC&start=0&limit=100` ab. MRR-Zugangsdaten sind erforderlich.
+Die MRR API v2 dokumentiert HMAC-signierte Requests und den Endpunkt `GET /rig`. HASHRENT fragt `/rig?type=sha256ab&currency=BTC&count=100&offset=0&orderby=price&orderdir=asc` ab. MRR-Zugangsdaten sind erforderlich.
 
 Setze auf dem Umbrel-Host die folgenden Variablen für den App-Container:
 
