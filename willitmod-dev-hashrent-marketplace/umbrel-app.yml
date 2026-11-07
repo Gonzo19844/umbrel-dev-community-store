@@ -4,7 +4,7 @@ name: HASHRENT
 tagline: SHA-256 ASICBoost Marketplace
 icon: https://raw.githubusercontent.com/Gonzo19844/umbrel-dev-community-store/main/willitmod-dev-hashrent-marketplace/icon.svg
 category: bitcoin
-version: "0.2.0"
+version: "0.3.0"
 port: 3000
 description: >-
   Self-hosted SHA-256 ASICBoost Marketplace mit MiningRigRentals-Live-Marktdaten,
@@ -18,8 +18,7 @@ repo: https://github.com/Gonzo19844/umbrel-dev-community-store
 support: https://github.com/Gonzo19844/umbrel-dev-community-store/issues
 gallery: []
 releaseNotes: >-
-  Live-Marktdaten und dynamischer SHA-256 ASICBoost Preisrechner. MRR API-Zugangsdaten
-  müssen serverseitig konfiguriert werden. Keine echten Mietaufträge oder Zahlungen.
+  Live-Marktdaten und dynamischer SHA-256 ASICBoost Preisrechner. MRR API-Zugangsdaten können in einer eigenen Einstellungsseite geprüft und verschlüsselt gespeichert werden. Keine echten Mietaufträge oder Zahlungen.
 dependencies: []
 path: ""
 defaultUsername: ""
