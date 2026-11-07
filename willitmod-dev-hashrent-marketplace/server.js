@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { createCommerce } = require('./commerce');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -16,6 +17,7 @@ const MAX_PH = 100;
 let credentials = { key: process.env.MRR_API_KEY || '', secret: process.env.MRR_API_SECRET || '' };
 let cache = { at: 0, rigs: null };
 let lastNonce = 0;
+const handleCommerce = createCommerce({ DATA_DIR, json, readJson, sameOrigin, mrrGet, mrrPut, getMarket, makeQuote, saveCredentials, getCredentials: () => credentials });
 
 function json(res, status, body) {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
@@ -211,7 +213,9 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const pathname = url.pathname;
-  if (pathname === '/health') return json(res, 200, { ok: true, app: 'HASHRENT', version: '0.4.0' });
+  const commerceHandled = await handleCommerce(req, res, pathname, url);
+  if (commerceHandled !== false) return;
+  if (pathname === '/health') return json(res, 200, { ok: true, app: 'HASHRENT', version: '0.5.0' });
   if (pathname === '/api/settings' && req.method === 'GET') {
     return json(res, 200, { configured: Boolean(credentials.key && credentials.secret), source: fs.existsSync(CONFIG_FILE) ? 'encrypted-file' : (credentials.key ? 'environment' : 'none') });
   }
@@ -352,4 +356,4 @@ const server = http.createServer(async (req, res) => {
     res.end(data);
   });
 });
-server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.4.0 listening on ' + PORT));
+server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.5.0 listening on ' + PORT));
