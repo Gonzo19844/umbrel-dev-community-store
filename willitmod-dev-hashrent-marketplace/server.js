@@ -65,7 +65,8 @@ async function mrrGet(endpoint, query = '') {
 function normalizeRig(rig) {
   const algo = String(rig.type || '').toLowerCase();
   if (algo !== 'sha256ab') return null;
-  if (String(rig.available_status || '').toLowerCase() !== 'available') return null;
+  const availability = String(rig.available_status || rig.status?.status || '').toLowerCase();
+  if (availability !== 'available') return null;
   if (rig.online === false || rig.status?.online === false || rig.status?.rented === true) return null;
 
   const hash = number(rig.hashrate?.advertised?.hash);
@@ -92,8 +93,8 @@ function normalizeRig(rig) {
 }
 async function getMarket(force = false) {
   if (!force && cache.rigs && Date.now() - cache.at < CACHE_MS) return cache.rigs;
-  const data = await mrrGet('/rig', 'type=sha256ab&currency=BTC&start=0&limit=100');
-  const rows = Array.isArray(data) ? data : (Array.isArray(data?.rigs) ? data.rigs : []);
+  const data = await mrrGet('/rig', 'type=sha256ab&currency=BTC&count=100&offset=0&orderby=price&orderdir=asc');
+  const rows = Array.isArray(data) ? data : (Array.isArray(data?.records) ? data.records : (Array.isArray(data?.rigs) ? data.rigs : []));
   const rigs = rows.map(normalizeRig).filter(Boolean).sort((a, b) => a.customerBTCPerPHDay - b.customerBTCPerPHDay);
   cache = { at: Date.now(), rigs };
   return rigs;
@@ -116,7 +117,8 @@ function makeQuote(rigs, targetPH, hours) {
     if (remaining <= 0) break;
     if (rig.maxHours && hours > rig.maxHours) continue;
     if (hours < rig.minHours) continue;
-    const allocatedPH = Math.min(remaining, rig.hashratePH);
+    // MRR rents complete rigs; never price a fractional rig as if it could be split.
+    const allocatedPH = rig.hashratePH;
     const base = allocatedPH * rig.baseBTCPerPHDay * hours / 24;
     const customer = base * (1 + MARKUP);
     selected.push({
