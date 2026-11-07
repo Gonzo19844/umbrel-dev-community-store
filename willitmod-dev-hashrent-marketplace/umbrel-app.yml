@@ -4,11 +4,11 @@ name: HASHRENT
 tagline: SHA-256 ASICBoost Marketplace
 icon: https://raw.githubusercontent.com/Gonzo19844/umbrel-dev-community-store/main/willitmod-dev-hashrent-marketplace/icon.svg
 category: bitcoin
-version: "0.4.0"
+version: "0.5.0"
 port: 3000
 description: >-
-  Self-hosted SHA-256 ASICBoost Marketplace mit MiningRigRentals-Live-Marktdaten,
-  Pool-Profil-Auswahl, direkter Einzel-Rig-Miete und Übersicht aktiver Mieten.
+  HASHRENT-eigener SHA-256 ASICBoost Marketplace mit Admin-Angebotsverwaltung,
+  NOWPayments-Checkout und automatischer MRR-Beschaffung im Hintergrund.
 developer: HASHRENT
 website: https://github.com/Gonzo19844/umbrel-dev-community-store
 submitter: Gonzo19844
@@ -17,12 +17,9 @@ repo: https://github.com/Gonzo19844/umbrel-dev-community-store
 support: https://github.com/Gonzo19844/umbrel-dev-community-store/issues
 gallery: []
 releaseNotes: >-
-  HASHRENT 0.3.2 vereinheitlicht die App-, Server- und Container-Versionen. Behebt EACCES beim Speichern verschlüsselter MRR-Zugangsdaten: Ein
-  Berechtigungs-Init-Service setzt vor dem Serverstart das persistente
-  Datenverzeichnis und vorhandene Dateien auf UID/GID 1000 (node). Die
-  Initialisierung läuft bei jedem Container-Neustart und vor dem Server.
-  Live-Marktdaten und dynamischer SHA-256 ASICBoost Preisrechner. Keine echten
-  Mietaufträge oder Zahlungen.
+  HASHRENT 0.5.0 bringt den eigenen HASHRENT-Shop mit privaten MRR-Beschaffungsrouten,
+  Admin-Angebotsverwaltung, verschlüsselten NOWPayments-Zugangsdaten,
+  BTC/LTC/DOGE/BCH-Checkout, signierter IPN-Prüfung und Auftragsstatus.
 dependencies: []
 path: ""
 defaultUsername: ""
