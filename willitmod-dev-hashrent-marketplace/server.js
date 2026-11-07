@@ -13,6 +13,7 @@ const MRR_BASE = (process.env.MRR_API_BASE || 'https://www.miningrigrentals.com/
 const CACHE_MS = Math.max(15000, Number(process.env.MARKET_CACHE_MS || 60000));
 const MARKUP = 0.05;
 const MIN_HOURS = 3;
+const MIN_PH = 0.005; // 5 TH/s
 const MAX_PH = 100;
 let credentials = { key: process.env.MRR_API_KEY || '', secret: process.env.MRR_API_SECRET || '' };
 let cache = { at: 0, rigs: null };
@@ -158,8 +159,8 @@ async function getMarket(force = false) {
   return rigs;
 }
 function makeQuote(rigs, targetPH, hours) {
-  if (!Number.isFinite(targetPH) || targetPH < 1 || targetPH > MAX_PH) {
-    const error = new Error('Hashrate muss zwischen 1 und 100 PH/s liegen.');
+  if (!Number.isFinite(targetPH) || targetPH < MIN_PH || targetPH > MAX_PH) {
+    const error = new Error('Hashrate muss zwischen 5 TH/s und 100 PH/s liegen.');
     error.status = 400; throw error;
   }
   if (!Number.isFinite(hours) || hours < MIN_HOURS) {
