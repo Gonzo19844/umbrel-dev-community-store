@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090d18"><title>HASHRENT – API-Einstellungen</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/"><span class="mark">H</span> HASHRENT</a><a class="topnav" href="/">← Zum Dashboard</a></header>
+<main class="settings-wrap">
+<a class="back-link" href="/">← Zurück zum Marketplace</a>
+<section class="settings-card">
+<div class="eyebrow">SERVER-KONFIGURATION</div>
+<h1>MiningRigRentals verbinden</h1>
+<p>Trage deinen API-Key und dein API-Secret ein. HASHRENT prüft die Verbindung und speichert die Zugangsdaten anschließend verschlüsselt auf deinem Umbrel.</p>
+<div id="settings-status" class="notice settings-status">Konfigurationsstatus wird geprüft …</div>
+<form id="settings-form" autocomplete="off">
+<label for="mrr-key">MiningRigRentals API-Key<input id="mrr-key" name="key" type="password" autocomplete="off" spellcheck="false" required maxlength="512" placeholder="API-Key eingeben"></label>
+<label for="mrr-secret">MiningRigRentals API-Secret<input id="mrr-secret" name="secret" type="password" autocomplete="new-password" spellcheck="false" required maxlength="512" placeholder="API-Secret eingeben"></label>
+<div class="settings-actions"><button class="primary" id="save-settings" type="submit">Verbindung testen & speichern</button><a class="rig-link" href="https://www.miningrigrentals.com/apidocv2" target="_blank" rel="noopener">MRR API-Dokumentation ↗</a></div>
+</form>
+<div class="security-note">Sicherheit: Die Schlüssel werden nicht im Browser gespeichert, nicht zurückgegeben und nicht in GitHub abgelegt. Die Verschlüsselung schützt die Konfigurationsdatei auf dem Datenträger; sichere dein Umbrel-Datenverzeichnis inklusive config.key. Wer Zugriff auf die HASHRENT-App hat, kann die Konfiguration ändern. Nutze HASHRENT daher nur hinter deinem geschützten Umbrel-Zugang.</div>
+</section>
+</main>
+<script src="/settings.js"></script>
+</body></html>

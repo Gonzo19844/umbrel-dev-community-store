@@ -2,20 +2,36 @@
 <html lang="de">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#090d18"><title>HASHRENT – SHA-256 Marketplace</title>
+<meta name="theme-color" content="#090d18"><title>HASHRENT – SHA-256 ASICBoost Marketplace</title>
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-<header class="topbar"><a class="brand" href="#"><span class="mark">H</span> HASHRENT</a><span class="demo">DEMO-MODUS</span></header>
+<header class="topbar"><a class="brand" href="#"><span class="mark">H</span> HASHRENT</a><nav class="topnav"><a href="/settings">API-Einstellungen</a><span class="demo" id="market-state">MARKT WIRD GELADEN</span></nav></header>
 <main>
-<section class="hero"><div class="eyebrow">SHA-256 HASHRATE MARKETPLACE</div><h1>Hashrate. Einfach<br><span>mieten.</span></h1><p>Ein zentraler Überblick für SHA-256-Angebote, Laufzeiten und transparente Preisberechnung.</p><a class="primary" href="#market">Angebote ansehen <span>↘</span></a></section>
-<section class="stats"><div><small>ALGORITHMUS</small><strong>SHA-256</strong></div><div><small>ABRECHNUNG</small><strong>BTC / Tag</strong></div><div><small>BETRIEBSART</small><strong>Demo</strong></div></section>
-<section id="market" class="section"><div class="section-head"><div><div class="eyebrow">MARKETPLACE</div><h2>Beispiel-Angebote</h2></div><span class="muted">Keine Live-Verfügbarkeit</span></div>
-<div class="offers">
-<article class="offer"><div class="offer-top"><span class="chip">SHA-256</span><span class="status">Beispiel</span></div><h3>ASIC Standard</h3><p class="muted">Demo-Angebot · Bitcoin Mining</p><div class="price">0,000012 <small>BTC / TH / Tag</small></div><div class="line"><span>Leistung</span><b>100 TH/s</b></div><div class="line"><span>Laufzeit</span><b>24 Stunden</b></div></article>
-<article class="offer featured"><div class="offer-top"><span class="chip">SHA-256</span><span class="status">Beispiel</span></div><h3>ASIC Pro</h3><p class="muted">Demo-Angebot · Bitcoin Mining</p><div class="price">0,000010 <small>BTC / TH / Tag</small></div><div class="line"><span>Leistung</span><b>250 TH/s</b></div><div class="line"><span>Laufzeit</span><b>24 Stunden</b></div></article>
+<section class="hero"><div class="eyebrow">SHA-256 ASICBOOST HASHRATE MARKETPLACE</div><h1>Hashrate.<br><span>Nach Bedarf.</span></h1><p>Live-Angebote von MiningRigRentals, automatisch kombiniert und mit transparentem 5-%-Aufschlag kalkuliert.</p><a class="primary" href="#calculator">Miete berechnen <span>↘</span></a></section>
+<section class="stats">
+<div><small>ALGORITHMUS</small><strong>SHA-256 ASICBoost</strong></div>
+<div><small>MARKTANGEBOTE</small><strong id="rig-count">–</strong></div>
+<div><small>VERFÜGBARE HASHRATE</small><strong id="market-hash">–</strong></div>
+</section>
+<section class="section"><div class="section-head"><div><div class="eyebrow">LIVE-MARKT</div><h2>Aktuelle Rig-Angebote</h2></div><button class="secondary" id="refresh">Aktualisieren</button></div>
+<div id="market-message" class="notice">Verbinde mit MiningRigRentals …</div><div class="offers" id="offers"></div><p class="muted small" id="market-updated"></p></section>
+<section id="calculator" class="section calculator">
+<div><div class="eyebrow">PREISKALKULATOR</div><h2>Deine Hashrate konfigurieren</h2><p class="muted">HASHRENT kombiniert verfügbare SHA-256 ASICBoost-Rigs nach Preis. Es werden nur passende Angebote berücksichtigt.</p>
+<div class="rules"><div><b>1–100 PH/s</b><span>Wählbare Hashrate</span></div><div><b>Ab 3 Stunden</b><span>Flexible Mietdauer</span></div><div><b>+5 %</b><span>Fester Aufschlag</span></div></div></div>
+<div class="calc-card">
+<label>Gewünschte Hashrate (PH/s)<input id="hashrate" type="number" min="1" max="100" step="0.1" value="1"></label>
+<label>Mietdauer (Stunden)<input id="hours" type="number" min="3" step="1" value="24"></label>
+<button class="primary full" id="calculate">Preis berechnen</button>
+<div id="quote-message" class="notice compact">Live-Markt laden, um einen Preis zu berechnen.</div>
+<div id="quote-result" hidden>
+<div class="total"><span>Grundpreis</span><strong id="base-total">–</strong></div>
+<div class="total"><span>HASHRENT-Aufschlag (5 %)</span><strong id="markup-total">–</strong></div>
+<div class="total final"><span>Gesamtpreis</span><strong id="grand-total">–</strong></div>
+<div class="line"><span>Abgedeckte Hashrate</span><b id="supplied">–</b></div>
+<div id="rig-selection"></div>
+</div>
+<p class="note">Unverbindliche Live-Kalkulation. Noch keine Bestellung, Miete oder Zahlung möglich.</p>
 </div></section>
-<section class="section calculator"><div><div class="eyebrow">PREISKALKULATOR</div><h2>Deinen Preis berechnen</h2><p class="muted">Der Aufschlag wird hier nur beispielhaft kalkuliert.</p></div>
-<div class="calc-card"><label>Hashrate (TH/s)<input id="hashrate" type="number" min="1" value="100"></label><label>Basispreis (BTC / TH / Tag)<input id="base" type="number" min="0" step="0.00000001" value="0.00001000"></label><label>Dein Aufschlag (BTC / TH / Tag)<input id="markup" type="number" min="0" step="0.00000001" value="0.00000200"></label><div class="total"><span>Gesamtpreis / Tag</span><strong id="total">0.00120000 BTC</strong></div><div class="total profit"><span>Rechnerischer Aufschlag / Tag</span><strong id="profit">0.00020000 BTC</strong></div><p class="note">Nur Rechenbeispiel. Keine Bestellung, Zahlung oder Hashrate-Miete wird ausgelöst.</p></div></section>
-<footer><span>HASHRENT</span><span>Self-hosted · Umbrel Community App · Demo 0.1.0</span></footer>
+<footer><span>HASHRENT</span><span>Umbrel Community App · 0.3.0 · SHA-256 ASICBoost only</span></footer>
 </main><script src="/app.js"></script></body></html>
