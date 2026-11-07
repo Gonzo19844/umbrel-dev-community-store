@@ -4,12 +4,11 @@ name: HASHRENT
 tagline: SHA-256 ASICBoost Marketplace
 icon: https://raw.githubusercontent.com/Gonzo19844/umbrel-dev-community-store/main/willitmod-dev-hashrent-marketplace/icon.svg
 category: bitcoin
-version: "0.3.2"
+version: "0.4.0"
 port: 3000
 description: >-
   Self-hosted SHA-256 ASICBoost Marketplace mit MiningRigRentals-Live-Marktdaten,
-  automatischer Rig-Kombination und 5-Prozent-Preisaufschlag. Mietaufträge und
-  Zahlungen sind in dieser Version deaktiviert.
+  Pool-Profil-Auswahl, direkter Einzel-Rig-Miete und Übersicht aktiver Mieten.
 developer: HASHRENT
 website: https://github.com/Gonzo19844/umbrel-dev-community-store
 submitter: Gonzo19844
