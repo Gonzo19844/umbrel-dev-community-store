@@ -1,8 +1,8 @@
 # HASHRENT – Umbrel Community App
 
-HASHRENT 0.3.0 ist ein SHA-256-ASICBoost-Marktplatz-Prototyp mit Live-Marktdaten von MiningRigRentals (MRR) API v2.
+HASHRENT 0.3.2 ist ein SHA-256-ASICBoost-Marktplatz-Prototyp mit Live-Marktdaten von MiningRigRentals (MRR) API v2.
 
-## Umfang in 0.3.0
+## Umfang in 0.3.2
 
 - Ausschließlich der MRR-Algorithmus `sha256ab` (SHA-256 ASICBoost).
 - Serverseitiger Abruf und 60-Sekunden-Cache für Rig-Angebote.
@@ -35,7 +35,7 @@ Die Werte dürfen niemals in Git committed oder im Browser ausgegeben werden. Al
 - Die Rig-Auswahl berücksichtigt den verfügbaren Status sowie minhours/maxhours.
 - Falls die gewünschte Hashrate nicht vollständig verfügbar ist, wird das fehlende Volumen ausgewiesen.
 
-Die Kalkulation ist unverbindlich. MRR-Rig-Reservierung und echte Miete sind in 0.3.0 absichtlich nicht implementiert.
+Die Kalkulation ist unverbindlich. MRR-Rig-Reservierung und echte Miete sind in 0.3.2 absichtlich nicht implementiert.
 
 ## Lokaler Test
 
@@ -49,8 +49,8 @@ curl http://localhost:3000/api/market
 
 Der Workflow `.github/workflows/hashrent-release.yml` baut das HASHRENT-Container-Image und veröffentlicht es in der GitHub Container Registry (GHCR).
 
-- Manuell: GitHub → Actions → **HASHRENT container release** → **Run workflow**; als Version zum Beispiel `0.3.0` eintragen.
-- Automatisch: Einen Git-Tag im Format `hashrent-vX.Y.Z` pushen, zum Beispiel `hashrent-v0.3.0`.
+- Manuell: GitHub → Actions → **HASHRENT container release** → **Run workflow**; als Version zum Beispiel `0.3.2` eintragen.
+- Automatisch: Einen Git-Tag im Format `hashrent-vX.Y.Z` pushen, zum Beispiel `hashrent-v0.3.2`.
 - Veröffentlicht werden `ghcr.io/gonzo19844/hashrent:VERSION` und `ghcr.io/gonzo19844/hashrent:latest`.
 
 **Wichtig:** Nach dem ersten erfolgreichen Push muss das Paket `hashrent` unter GitHub → Packages auf **Public** gestellt werden, damit Umbrel das Image ohne GHCR-Anmeldung laden kann. Vor dem produktiven Mietbetrieb müssen MRR-API-Zugriff, tatsächliche API-Antworten und Preisnormalisierung mit einem berechtigten MRR-Konto getestet werden.
