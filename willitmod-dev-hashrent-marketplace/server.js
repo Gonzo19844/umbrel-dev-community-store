@@ -277,7 +277,7 @@ const server = http.createServer(async (req, res) => {
       const rigId = String(body.rigId || '');
       const profileId = String(body.profileId || '');
       const hours = Number(body.hours);
-      if (!/^\\d{1,12}$/.test(rigId) || !/^\\d{1,12}$/.test(profileId)) return json(res, 400, { error: 'Ungültige Rig- oder Profil-ID.' });
+      if (!/^\d{1,12}$/.test(rigId) || !/^\d{1,12}$/.test(profileId)) return json(res, 400, { error: 'Ungültige Rig- oder Profil-ID.' });
       if (!Number.isInteger(hours) || hours < MIN_HOURS || hours > 720) return json(res, 400, { error: 'Mietdauer muss zwischen 3 und 720 ganzen Stunden liegen.' });
       const [account, profiles, rawRig] = await Promise.all([
         mrrGet('/whoami'),
