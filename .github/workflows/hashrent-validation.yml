@@ -1,4 +1,4 @@
-name: HASHRENT 0.2.0 validation
+name: HASHRENT 0.3.0 validation
 on:
   push:
     branches:
@@ -22,5 +22,6 @@ jobs:
         run: |
           node --check willitmod-dev-hashrent-marketplace/server.js
           node --check willitmod-dev-hashrent-marketplace/public/app.js
+          node --check willitmod-dev-hashrent-marketplace/public/settings.js
       - name: Build container
         run: docker build -t hashrent:ci willitmod-dev-hashrent-marketplace
