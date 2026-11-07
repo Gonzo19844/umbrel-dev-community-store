@@ -128,7 +128,7 @@ function normalizeRig(rig) {
     baseBTCPerPHDay: basePrice / priceUnitPH,
     customerBTCPerPHDay: (basePrice / priceUnitPH) * (1 + MARKUP),
     minHours: Math.max(MIN_HOURS, number(rig.minhours) || MIN_HOURS),
-    maxHours: Math.max(MIN_HOURS, number(rig.maxhours) || 0),
+    maxHours: number(rig.maxhours) > 0 ? number(rig.maxhours) : 0,
     rpi: number(rig.rpi),
     url: String(rig.shorturl || ('https://www.miningrigrentals.com/rigs/' + rig.id))
   };
