@@ -23,7 +23,7 @@ function createCommerce(deps) {
   function admin() { return readFile(adminFile, null); }
   function offers() {
     const saved = readFile(offersFile, []);
-    if (saved.length) return saved;
+    if (fs.existsSync(offersFile)) return saved;
     const now = new Date().toISOString();
     const defaults = [
       { id: 'starter-5th-100th', name: 'HASHRENT Starter', description: 'SHA-256 ASICBoost von 5 bis 100 TH/s.', minPH: 0.005, maxPH: 0.1, minHours: 3, maxHours: 168, enabled: true, updatedAt: now },
