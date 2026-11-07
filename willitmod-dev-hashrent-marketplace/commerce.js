@@ -86,6 +86,8 @@ function createCommerce(deps) {
       const selectedRigs = (current.privateRigs || []).map(saved => live.find(r => String(r.id) === String(saved.id))).filter(Boolean);
       const supplied = selectedRigs.reduce((sum, r) => sum + Number(r.hashratePH || 0), 0);
       if (selectedRigs.length !== (current.privateRigs || []).length || supplied + 1e-9 < Number(current.targetPH)) throw new Error('Die ursprünglich kalkulierte Hashrate ist nach Zahlung nicht mehr vollständig verfügbar.');
+      const liveCostBTC = selectedRigs.reduce((sum, rig) => sum + Number(rig.hashratePH) * Number(rig.baseBTCPerPHDay) * Number(current.hours) / 24, 0);
+      if (liveCostBTC > Number(current.baseBTC) * 1.000001) throw new Error('Der MRR-Einkaufspreis ist seit der Kundenrechnung gestiegen. Die Bestellung wurde zur manuellen Prüfung gestoppt, damit deine Marge nicht aufgezehrt wird.');
       const createdIds = [];
       for (const selected of selectedRigs) {
         const raw = await mrrGet('/rig/' + encodeURIComponent(String(selected.id)));
