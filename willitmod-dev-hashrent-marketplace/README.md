@@ -1,61 +1,41 @@
 # HASHRENT – Umbrel Community App
 
-HASHRENT 0.3.2 ist ein SHA-256-ASICBoost-Marktplatz-Prototyp mit Live-Marktdaten von MiningRigRentals (MRR) API v2.
+HASHRENT 0.4.0 verbindet den SHA-256-ASICBoost-Marktplatz mit der MiningRigRentals API v2 und bietet eine ausdrücklich bestätigungspflichtige Einzel-Rig-Miete.
 
-## Umfang in 0.3.2
+## Funktionen
 
-- Ausschließlich der MRR-Algorithmus `sha256ab` (SHA-256 ASICBoost).
-- Serverseitiger Abruf und 60-Sekunden-Cache für Rig-Angebote.
-- HMAC-SHA1-Authentifizierung der MRR-API v2; API-Key und Secret bleiben serverseitig.
-- Angebotsübersicht mit Hashrate, BTC-Preis, Region und Mietfenster.
-- Preisrechner für 1–100 PH/s und mindestens 3 Stunden.
-- Automatische, preisorientierte Kombination verfügbarer Rigs.
-- Fester HASHRENT-Aufschlag von 5 %.
-- Eigene API-Einstellungsseite mit Verbindungstest für MRR.
-- API-Key und Secret werden mit AES-256-GCM verschlüsselt im persistenten App-Datenverzeichnis gespeichert; der Schlüssel liegt separat mit Dateirechten 0600.
-- Zugangsdaten werden nie an den Browser zurückgegeben oder in Logs geschrieben.
-- Keine echten Mietaufträge, Poolprofile, Wallet-Operationen oder Zahlungen.
+- Ausschließlich MRR-Algorithmus `sha256ab` (SHA-256 ASICBoost).
+- Live-Angebote mit 60-Sekunden-Cache und serverseitiger HMAC-SHA1-Authentifizierung.
+- Preisrechner für 1–100 PH/s, mindestens 3 Stunden und 5 % angezeigtem HASHRENT-Aufschlag.
+- MRR-Kontoprüfung über `GET /whoami`, einschließlich Mietberechtigung.
+- Abruf vorhandener SHA-256-ASICBoost-Poolprofile; Pool-Zugangsdaten werden nicht an den Browser gegeben.
+- Aktive Mieten werden über `GET /rental` angezeigt.
+- Einzel-Rig-Buchung über `PUT /rental` nach expliziter Bestätigung. HASHRENT prüft vor dem Kauf MRR-Berechtigung, Poolprofil, Algorithmus, aktuelle Rig-Verfügbarkeit, Preis und Mietdauer erneut.
+- API-Key und Secret werden mit AES-256-GCM im persistenten App-Datenverzeichnis gespeichert.
 
-## MRR API einrichten
+## Wichtige Hinweise zur Buchung
 
-Die MRR API v2 dokumentiert HMAC-signierte Requests und den Endpunkt `GET /rig`. HASHRENT fragt `/rig?type=sha256ab&currency=BTC&count=100&offset=0&orderby=price&orderdir=asc` ab. MRR-Zugangsdaten sind erforderlich.
+MRR erstellt eine Miete pro Rig. HASHRENT führt in 0.4.0 absichtlich keine automatische Mehrfachbuchung über mehrere Rigs durch, weil mehrere externe Buchungen nicht atomar sind und eine teilweise erfolgreiche Bestellung entstehen könnte. Wähle deshalb ein einzelnes Rig, dessen komplette Hashrate zu deinem Bedarf passt.
 
-Setze auf dem Umbrel-Host die folgenden Variablen für den App-Container:
+Die MRR-Miete wird direkt über das verbundene MiningRigRentals-Konto bezahlt. MRR belastet das dortige Guthaben gemäß dem aktuellen Rig-Preis. Der 5-%-HASHRENT-Aufschlag wird in dieser Version nur angezeigt und **nicht separat eingezogen**. Es gibt noch keine Kundenkonten, externe Zahlungsabwicklung oder automatische Auszahlung der Marge. Die ausgewiesene Kalkulation ist daher kein Zahlungsbeleg und HASHRENT nimmt keine Kundenzahlung entgegen.
 
-- `MRR_API_KEY`: persönlicher MiningRigRentals API-Key
-- `MRR_API_SECRET`: persönliches API-Secret
+Ein API-Timeout während der Erstellung kann bedeuten, dass MRR die Miete bereits angelegt hat, die Antwort HASHRENT aber nicht erreicht hat. In diesem Fall zuerst die MRR-Mietübersicht prüfen und nicht sofort erneut buchen.
 
-Die Werte dürfen niemals in Git committed oder im Browser ausgegeben werden. Alternativ können die Zugangsdaten nach dem Start unter `/settings` eingegeben werden. Die App prüft die MRR-Verbindung vor dem Speichern und verschlüsselt die Zugangsdaten lokal im persistenten App-Datenverzeichnis. Der Schlüssel zur Verschlüsselung wird separat mit Dateirechten 0600 abgelegt. Sichere das gesamte App-Datenverzeichnis inklusive `config.key`; ohne diesen Schlüssel können gespeicherte Zugangsdaten nach einer Wiederherstellung nicht entschlüsselt werden. Die Einstellungsseite zeigt nur den Verbindungsstatus und gibt die gespeicherten Schlüssel nicht wieder aus. Ohne Zugangsdaten zeigt die App einen klaren Konfigurationshinweis statt erfundener Demo-Livepreise.
+## MiningRigRentals verbinden
 
-## Kalkulation
+Unter `/settings` API-Key und API-Secret hinterlegen. HASHRENT prüft die Verbindung und speichert die Zugangsdaten verschlüsselt. Die Werte niemals in Git committen oder im Browser ausgeben. Das persistente Datenverzeichnis inklusive `config.key` sichern; ohne diesen Schlüssel kann HASHRENT die verschlüsselten Zugangsdaten nach einer Wiederherstellung nicht entschlüsseln.
 
-- Der API-Preis wird auf BTC/PH/Tag normalisiert.
-- Der 5-%-Aufschlag wird auf den kalkulierten Basispreis angewendet.
-- Kosten = zugeteilte PH/s × BTC/PH/Tag × Mietstunden / 24.
-- Die Rig-Auswahl berücksichtigt den verfügbaren Status sowie minhours/maxhours.
-- Falls die gewünschte Hashrate nicht vollständig verfügbar ist, wird das fehlende Volumen ausgewiesen.
-
-Die Kalkulation ist unverbindlich. MRR-Rig-Reservierung und echte Miete sind in 0.3.2 absichtlich nicht implementiert.
-
-## Lokaler Test
-
-```sh
-npm start
-curl http://localhost:3000/health
-curl http://localhost:3000/api/market
-```
+Für echte Buchungen benötigt der API-Key die MRR-Berechtigung `rent=yes` sowie mindestens ein Poolprofil mit Algorithmus `sha256ab`. Das Poolprofil muss in deinem MRR-Konto bereits eingerichtet sein.
 
 ## Veröffentlichung
 
-Der Workflow `.github/workflows/hashrent-release.yml` baut das HASHRENT-Container-Image und veröffentlicht es in der GitHub Container Registry (GHCR).
+Der Workflow `.github/workflows/hashrent-release.yml` baut `ghcr.io/gonzo19844/hashrent:VERSION` und `:latest`.
 
-- Manuell: GitHub → Actions → **HASHRENT container release** → **Run workflow**; als Version zum Beispiel `0.3.2` eintragen.
-- Automatisch: Einen Git-Tag im Format `hashrent-vX.Y.Z` pushen, zum Beispiel `hashrent-v0.3.2`.
-- Veröffentlicht werden `ghcr.io/gonzo19844/hashrent:VERSION` und `ghcr.io/gonzo19844/hashrent:latest`.
-
-**Wichtig:** Nach dem ersten erfolgreichen Push muss das Paket `hashrent` unter GitHub → Packages auf **Public** gestellt werden, damit Umbrel das Image ohne GHCR-Anmeldung laden kann. Vor dem produktiven Mietbetrieb müssen MRR-API-Zugriff, tatsächliche API-Antworten und Preisnormalisierung mit einem berechtigten MRR-Konto getestet werden.
+- Manuell: GitHub → Actions → **HASHRENT container release** → **Run workflow**, Version `0.4.0`.
+- Automatisch: Tag `hashrent-v0.4.0` pushen.
+- Das GHCR-Paket muss öffentlich sein, damit Umbrel es ohne GHCR-Anmeldung laden kann.
 
 ## Quellen
 
 - MRR API v2: https://www.miningrigrentals.com/apidocv2
-- SHA256 Asicboost Markt: https://www.miningrigrentals.com/rigs/sha256ab
+- SHA256 ASICBoost-Markt: https://www.miningrigrentals.com/rigs/sha256ab
