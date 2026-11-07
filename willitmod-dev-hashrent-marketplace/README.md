@@ -47,7 +47,13 @@ curl http://localhost:3000/api/market
 
 ## Veröffentlichung
 
-Der Build-Workflow erzeugt das Container-Image `ghcr.io/gonzo19844/hashrent:0.2.0`. Vor dem Release müssen API-Zugriff, tatsächliche MRR-Antworten, SHA256AB-Filterung und die Preisnormalisierung mit einem berechtigten MRR-Konto getestet werden.
+Der Workflow `.github/workflows/hashrent-release.yml` baut das HASHRENT-Container-Image und veröffentlicht es in der GitHub Container Registry (GHCR).
+
+- Manuell: GitHub → Actions → **HASHRENT container release** → **Run workflow**; als Version zum Beispiel `0.3.0` eintragen.
+- Automatisch: Einen Git-Tag im Format `hashrent-vX.Y.Z` pushen, zum Beispiel `hashrent-v0.3.0`.
+- Veröffentlicht werden `ghcr.io/gonzo19844/hashrent:VERSION` und `ghcr.io/gonzo19844/hashrent:latest`.
+
+**Wichtig:** Nach dem ersten erfolgreichen Push muss das Paket `hashrent` unter GitHub → Packages auf **Public** gestellt werden, damit Umbrel das Image ohne GHCR-Anmeldung laden kann. Vor dem produktiven Mietbetrieb müssen MRR-API-Zugriff, tatsächliche API-Antworten und Preisnormalisierung mit einem berechtigten MRR-Konto getestet werden.
 
 ## Quellen
 
