@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "HASHRENT release version (for example 0.5.1)"
+        description: "HASHRENT release version (for example 0.5.2)"
         required: true
-        default: "0.5.1"
+        default: "0.5.2"
         type: string
   push:
     branches:
