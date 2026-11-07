@@ -4,7 +4,7 @@ HASHRENT zeigt Marktangebote für **SHA256 Asicboost** von MiningRigRentals (MRR
 
 ## Aktueller Funktionsumfang
 
-- Ausschließlich SHA256 Asicboost (MRR-Algorithmuskennung: \`sha256ab\`)
+- Ausschließlich SHA256 Asicboost (MRR-Algorithmuskennung: **sha256ab**)
 - Serverseitiger Abruf der MRR-Rigangebote in BTC
 - Zwischenspeicherung der Marktdaten für 60 Sekunden
 - Auswahl von 1 bis 100 PH/s
@@ -16,13 +16,13 @@ HASHRENT zeigt Marktangebote für **SHA256 Asicboost** von MiningRigRentals (MRR
 
 ## MRR-API
 
-Die App fragt die API v2 unter \`https://www.miningrigrentals.com/api/v2\` mit dem Algorithmus \`sha256ab\` ab. MRR dokumentiert öffentliche Marktdaten und private, authentifizierte Kontofunktionen. Falls der Rig-Endpunkt für das verwendete Konto eine Anmeldung verlangt, können die folgenden Variablen ausschließlich serverseitig gesetzt werden:
+Die App fragt die API v2 unter https://www.miningrigrentals.com/api/v2 mit dem Algorithmus **sha256ab** ab. MRR dokumentiert öffentliche Marktdaten und private, authentifizierte Kontofunktionen. Falls der Rig-Endpunkt für das verwendete Konto eine Anmeldung verlangt, können die folgenden Variablen ausschließlich serverseitig gesetzt werden:
 
-- \`MRR_API_KEY\`
-- \`MRR_API_SECRET\`
-- optional \`MRR_API_BASE\`
+- **MRR_API_KEY**
+- **MRR_API_SECRET**
+- optional **MRR_API_BASE**
 
-Die App signiert authentifizierte GET-Anfragen serverseitig. Zugangsdaten niemals in \`public/\`, in GitHub-Dateien oder im Browser hinterlegen. API-Daten werden 60 Sekunden gecacht; bei kurzzeitigen Fehlern kann ein höchstens 10 Minuten alter Cache als veraltet markiert zurückgegeben werden.
+Die App signiert authentifizierte GET-Anfragen serverseitig. Zugangsdaten niemals in public/, in GitHub-Dateien oder im Browser hinterlegen. API-Daten werden 60 Sekunden gecacht; bei kurzzeitigen Fehlern kann ein höchstens 10 Minuten alter Cache als veraltet markiert zurückgegeben werden.
 
 ## Wichtige Grenzen dieser Version
 
@@ -32,12 +32,10 @@ Vor dem Livebetrieb mit echten Kunden müssen insbesondere MRR-Berechtigungen un
 
 ## Lokale Entwicklung
 
-\`\`\`bash
-npm start
-\`\`\`
+    npm start
 
-Die App lauscht standardmäßig auf Port 3000. Status: \`/health\`; Marktdaten: \`/api/market\`; Preisangebot: \`/api/quote?hashratePH=1&hours=3\`.
+Die App lauscht standardmäßig auf Port 3000. Status: /health; Marktdaten: /api/market; Preisangebot: /api/quote?hashratePH=1&hours=3.
 
 ## Umbrel-Veröffentlichung
 
-Das Container-Image wird über den GitHub Actions Workflow im Repository gebaut. Für ein Release müssen Image-Tag, \`umbrel-app.yml\` und der Community-Store-Eintrag gemeinsam aktualisiert werden.
+Das Container-Image wird über den GitHub Actions Workflow im Repository gebaut. Für ein Release müssen Image-Tag, umbrel-app.yml und der Community-Store-Eintrag gemeinsam aktualisiert werden. Das vorgesehene App-Image für diesen Entwicklungsstand ist ghcr.io/gonzo19844/hashrent:0.2.0; es muss vor Installation gebaut und veröffentlicht werden.
