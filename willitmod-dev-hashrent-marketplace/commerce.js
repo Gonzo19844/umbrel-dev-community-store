@@ -289,9 +289,8 @@ function createCommerce(deps) {
       if (!sameOrigin(req)) return json(res, 403, { error: 'Ungültige Herkunft der Anfrage.' });
       try {
         const body = await readJson(req);
-        const draftOrder = body.checkoutToken ? orders().find(x => x.accessToken === String(body.checkoutToken) && x.status === 'draft') : null;
-        const offer = offers().find(x => x.id === String(body.offerId || draftOrder?.offerId) && x.enabled === true);
-        if (!offer) return json(res, 404, { error: 'Dieses HASHRENT-Angebot ist nicht verfügbar oder der Checkout-Link ist ungültig.' });
+        const offer = offers().find(x => x.id === String(body.offerId) && x.enabled === true);
+        if (!offer) return json(res, 404, { error: 'Dieses HASHRENT-Angebot ist nicht verfügbar.' });
         const accessToken = token();
         const id = 'HR-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
         const rows = orders();
@@ -304,8 +303,10 @@ function createCommerce(deps) {
       if (!sameOrigin(req)) return json(res, 403, { error: 'Ungültige Herkunft der Anfrage.' });
       try {
         const body = await readJson(req);
-        const offer = offers().find(x => x.id === String(body.offerId) && x.enabled === true);
-        if (!offer) return json(res, 404, { error: 'Dieses HASHRENT-Angebot ist nicht verfügbar.' });
+        const draftOrder = body.checkoutToken ? orders().find(x => x.accessToken === String(body.checkoutToken) && x.status === 'draft') : null;
+        if (body.checkoutToken && !draftOrder) return json(res, 404, { error: 'Dieser persönliche Checkout-Link ist ungültig oder wurde bereits verwendet.' });
+        const offer = offers().find(x => x.id === String(body.offerId || draftOrder?.offerId) && x.enabled === true);
+        if (!offer || (draftOrder && offer.id !== draftOrder.offerId)) return json(res, 404, { error: 'Dieses HASHRENT-Angebot ist nicht verfügbar.' });
         const targetPH = Number(body.targetPH), hours = Number(body.hours);
         const poolHost = String(body.poolHost || '').trim().replace(/^stratum\+tcp:\/\//i, '').split(':')[0];
         const poolPort = Number(body.poolPort), poolUser = String(body.poolUser || '').trim(), poolPass = String(body.poolPass || 'x').trim();
