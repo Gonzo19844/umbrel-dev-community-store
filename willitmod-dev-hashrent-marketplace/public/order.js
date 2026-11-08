@@ -48,11 +48,12 @@ async function load(){
     $('rig-dot').classList.toggle('done',Number(mining.rentalCount)>0);
     $('mining-dot').classList.toggle('done',d.status==='active'||mining.available);
     const started=!!(mining.rentalCount&&mining.available);
-    const elapsed=started?Math.max(0,(Date.now()-created.getTime())/3600000):0;
+    const miningStart=mining.startedAt?new Date(mining.startedAt):created;
+    const elapsed=started&&!Number.isNaN(miningStart.getTime())?Math.max(0,(Date.now()-miningStart.getTime())/3600000):0;
     const pct=started?Math.min(100,elapsed/Math.max(1,Number(d.hours))*100):0;
     $('runtime-progress').style.width=pct.toFixed(1)+'%';
     $('runtime-percent').textContent=fmt(pct,1)+' %';
-    $('runtime-note').textContent=simulated?'Diese Bestellung ist eine Testbestellung. Es wurde keine Zahlung angenommen und keine MRR-Miete gestartet.':(started?'Fortschritt ist eine zeitbasierte Anzeige ab dem gespeicherten Bestellzeitpunkt.':'Die Laufzeit beginnt, sobald echte MRR-Rentals bereitgestellt und Mining-Messwerte verfügbar sind.');
+    $('runtime-note').textContent=simulated?'Diese Bestellung ist eine Testbestellung. Es wurde keine Zahlung angenommen und keine MRR-Miete gestartet.':(started?'Fortschritt basiert auf dem tatsächlichen Startzeitpunkt der gemieteten Rigs.':'Die Laufzeit beginnt, sobald echte MRR-Rentals bereitgestellt und Mining-Messwerte verfügbar sind.');
   }catch(e){
     $('order-state').textContent='BESTELLUNG NICHT VERFÜGBAR';
     $('order-state').classList.add('error');
