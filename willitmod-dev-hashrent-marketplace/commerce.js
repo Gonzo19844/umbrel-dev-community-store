@@ -255,7 +255,7 @@ function createCommerce(deps) {
               orderStatus: parent?.status || 'unknown', targetPH: Number(parent?.targetPH || 0),
               rigId: String(detail?.rig || detail?.rigid || sourceRig.id || ''),
               rigName: String(detail?.rig_name || detail?.name || sourceRig.name || ('MRR-Rig #' + (sourceRig.id || '?'))),
-              status: String(detail?.status || detail?.rental_status || 'active'),
+              status: String(detail?.status || detail?.rental_status || 'active'), startAt: detail?.start || detail?.time_start || null,
               advertisedPH: hashToPH(advertised.hash, advertised.type),
               averagePH: hashToPH(average.hash, average.type),
               averagePercent: Number(average.percent || 0),
@@ -467,13 +467,15 @@ function createCommerce(deps) {
       const points = [...pointMap.entries()].sort((a, b) => a[0] - b[0]).slice(-36).map(([time, ph]) => ({ time, ph }));
       const latestPH = miningRows.reduce((sum, rental) => sum + (rental.latestPoints.length ? rental.latestPoints[rental.latestPoints.length - 1].ph : 0), 0);
       const averagePH = miningRows.reduce((sum, rental) => sum + Number(rental.averagePH || 0), 0);
+      const startTimes = miningRows.map(rental => rental.startAt).filter(Boolean).map(value => new Date(value).getTime()).filter(Number.isFinite);
+      const startedAt = startTimes.length ? new Date(Math.min(...startTimes)).toISOString() : null;
       return json(res, 200, {
         orderId: order.id, offerName: order.offerName, targetPH: order.targetPH, hours: order.hours,
         currency: order.currency || 'btc', priceEUR: order.priceEUR, customerBTC: order.customerBTC || null,
         paymentStatus: order.paymentStatus, status: order.status, paymentMode: order.paymentMode || PAYMENT_MODE,
         simulationNote: order.simulationNote || '', createdAt: order.createdAt,
         mining: { available: rentalIds.length > 0 && (points.length > 0 || averagePH > 0), rentalCount: rentalIds.length,
-          averagePH, latestPH, points, updatedAt: new Date().toISOString(),
+          averagePH, latestPH, points, startedAt, updatedAt: new Date().toISOString(),
           rentalStatuses: miningRows.map(row => row.status) }
       });
     }
