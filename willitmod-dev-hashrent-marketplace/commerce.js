@@ -223,8 +223,8 @@ function createCommerce(deps) {
   function graphPoints(graph, fallbackUnit) {
     const raw = graph?.chartdata?.average || graph?.chartdata?.bars || '';
     const unit = graph?.hashtype || fallbackUnit || '';
-    return String(raw).match(/\\[\\s*\\d+\\s*,\\s*[-+]?\\d*\\.?\\d+(?:e[-+]?\\d+)?\\s*\\]/gi)?.slice(-36).map(item => {
-      const pair = item.replace(/[\\[\\]\\s]/g, '').split(',');
+    return String(raw).match(/\[\s*\d+\s*,\s*[-+]?\d*\.?\d+(?:e[-+]?\d+)?\s*\]/gi)?.slice(-36).map(item => {
+      const pair = item.replace(/[\[\]\s]/g, '').split(',');
       return { time: Number(pair[0]), ph: hashToPH(Number(pair[1]), unit) };
     }).filter(point => Number.isFinite(point.ph)) || [];
   }
