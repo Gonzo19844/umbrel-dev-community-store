@@ -4,7 +4,7 @@ name: HASHRENT
 tagline: SHA-256 ASICBoost Marketplace
 icon: https://raw.githubusercontent.com/Gonzo19844/umbrel-dev-community-store/main/willitmod-dev-hashrent-marketplace/icon.svg
 category: bitcoin
-version: "0.5.7"
+version: "0.5.8"
 port: 3000
 description: >-
   HASHRENT-eigener SHA-256 ASICBoost Marketplace mit Admin-Angebotsverwaltung,
@@ -17,4 +17,4 @@ repo: https://github.com/Gonzo19844/umbrel-dev-community-store
 support: https://github.com/Gonzo19844/umbrel-dev-community-store/issues
 gallery: []
 releaseNotes: >-
-  0.5.7 ergänzt eine private, screenshot-inspirierte Mining-Bestellansicht mit echten MRR-Messwerten; im Testmodus bleiben Zahlung und MRR-Miete deaktiviert. 0.5.6 aktiviert vorübergehend simulierte Zahlungen. Checkout und Bestellstatus können ohne NOWPayments-Rechnung, echte Zahlung oder MRR-Miete getestet werden. Das Live-Mining-Dashboard und der Ausschluss von RPI bleiben erhalten.
+  0.5.8 ergänzt die Zuordnung bestehender MRR-Rentals zu HASHRENT-Testbestellungen und verbessert die Live-Mining-Anzeige einschließlich Startzeit. Es werden keine neuen MRR-Mieten gestartet; Zahlungen bleiben simuliert. 0.5.7 ergänzt die private Mining-Bestellansicht mit echten MRR-Messwerten.
