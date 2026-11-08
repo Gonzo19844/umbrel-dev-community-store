@@ -99,7 +99,7 @@ async function mrrRequestWith(endpoint, method, params, auth) {
       'x-api-sign': signature,
       'accept': 'application/json',
       ...(isRead ? {} : { 'content-type': 'application/x-www-form-urlencoded' }),
-      'user-agent': 'HASHRENT-Umbrel/0.4.0'
+      'user-agent': 'HASHRENT-Umbrel/0.5.4'
     },
     ...(!isRead ? { body: form.toString() } : {}),
     signal: AbortSignal.timeout(15000)
@@ -146,7 +146,6 @@ function normalizeRig(rig) {
     customerBTCPerPHDay: (basePrice / priceUnitPH) * (1 + MARKUP),
     minHours: Math.max(MIN_HOURS, number(rig.minhours) || MIN_HOURS),
     maxHours: number(rig.maxhours) > 0 ? number(rig.maxhours) : 0,
-    rpi: number(rig.rpi),
     url: String(rig.shorturl || ('https://www.miningrigrentals.com/rigs/' + rig.id))
   };
 }
@@ -216,7 +215,7 @@ const server = http.createServer(async (req, res) => {
   const pathname = url.pathname;
   const commerceHandled = await handleCommerce(req, res, pathname, url);
   if (commerceHandled !== false) return;
-  if (pathname === '/health') return json(res, 200, { ok: true, app: 'HASHRENT', version: '0.5.3' });
+  if (pathname === '/health') return json(res, 200, { ok: true, app: 'HASHRENT', version: '0.5.4' });
   if (pathname === '/api/settings' && req.method === 'GET') {
     return json(res, 200, { configured: Boolean(credentials.key && credentials.secret), source: fs.existsSync(CONFIG_FILE) ? 'encrypted-file' : (credentials.key ? 'environment' : 'none') });
   }
@@ -357,4 +356,4 @@ const server = http.createServer(async (req, res) => {
     res.end(data);
   });
 });
-server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.5.3 listening on ' + PORT));
+server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.5.4 listening on ' + PORT));

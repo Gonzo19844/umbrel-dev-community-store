@@ -1,6 +1,6 @@
 {
   "name": "hashrent-marketplace",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "private": true,
   "description": "HASHRENT live SHA-256 ASICBoost marketplace for Umbrel",
   "main": "server.js",

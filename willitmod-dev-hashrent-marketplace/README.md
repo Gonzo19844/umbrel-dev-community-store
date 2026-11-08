@@ -1,6 +1,6 @@
 # HASHRENT – Umbrel Community App
 
-HASHRENT 0.5.1 ist ein Versions- und Bereitstellungsupdate auf Basis von 0.5.0. Die App stellt einen eigenen HASHRENT-Shop mit administrierbaren Angeboten und NOWPayments-Checkout bereit. MiningRigRentals wird ausschließlich serverseitig als Beschaffungsanbieter verwendet.
+HASHRENT 0.5.4 entfernt RPI vollständig aus der Auswahl und Bewertung von MiningRigRentals-Angeboten. Die App stellt einen eigenen HASHRENT-Shop mit administrierbaren Angeboten und NOWPayments-Checkout bereit. MiningRigRentals wird ausschließlich serverseitig als Beschaffungsanbieter verwendet.
 
 ## Öffentlicher Shop
 
@@ -47,8 +47,8 @@ Zugangsdaten werden gemeinsam mit dem bestehenden MRR-Schlüsselmaterial AES-256
 
 Der Workflow .github/workflows/hashrent-release.yml baut ghcr.io/gonzo19844/hashrent:VERSION und :latest.
 
-- Manuell: GitHub → Actions → HASHRENT container release → Run workflow, Version 0.5.1.
-- Automatisch: Änderungen an HASHRENT auf main bauen das Image anhand der package.json-Version (0.5.1).
+- Manuell: GitHub → Actions → HASHRENT container release → Run workflow, Version 0.5.4.
+- Automatisch: Änderungen an HASHRENT auf main bauen das Image anhand der package.json-Version (0.5.4).
 - Das GHCR-Paket muss öffentlich sein, damit Umbrel es ohne GHCR-Anmeldung laden kann.
 
 ## Quellen
