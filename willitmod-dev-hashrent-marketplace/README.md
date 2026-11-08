@@ -1,6 +1,6 @@
 # HASHRENT – Umbrel Community App
 
-HASHRENT 0.5.4 entfernt RPI vollständig aus der Auswahl und Bewertung von MiningRigRentals-Angeboten. Die App stellt einen eigenen HASHRENT-Shop mit administrierbaren Angeboten und NOWPayments-Checkout bereit. MiningRigRentals wird ausschließlich serverseitig als Beschaffungsanbieter verwendet.
+HASHRENT 0.5.5 entfernt RPI vollständig aus der Auswahl und Bewertung von MiningRigRentals-Angeboten. Die App stellt einen eigenen HASHRENT-Shop mit administrierbaren Angeboten und NOWPayments-Checkout bereit. MiningRigRentals wird ausschließlich serverseitig als Beschaffungsanbieter verwendet.
 
 ## Öffentlicher Shop
 
@@ -43,12 +43,12 @@ Zugangsdaten werden gemeinsam mit dem bestehenden MRR-Schlüsselmaterial AES-256
 - MRR-Beschaffung erfolgt nach Zahlung anhand der zum Zeitpunkt der Preisermittlung ausgewählten Rigs. Wenn eines davon vor der Bereitstellung nicht mehr verfügbar ist, wird die Bestellung zur manuellen Prüfung markiert.
 - MRR erstellt pro Rig einen separaten Mietauftrag. Bei einem Teilerfolg werden bereits erstellte MRR-Miet-IDs intern protokolliert; eine automatische Rückabwicklung kann MRR-seitig nicht garantiert werden.
 
-## Veröffentlichung
+## Live-Mining-Dashboard\n\n- Geschützter Admin-Bereich zeigt HASHRENT-Aufträge und die dazugehörigen gemieteten MRR-Rentals.\n- Durchschnittliche und zuletzt gemessene Hashrate sowie Leistung gegenüber der beworbenen Hashrate werden aus MRR-Rental- und Graph-Daten gelesen.\n- 24-Stunden-Verlauf wird serverseitig geladen; das Dashboard aktualisiert sich alle 60 Sekunden.\n- Es werden keine Mining-Werte simuliert. MRR-Datenfehler werden sichtbar markiert.\n- Aus API-Limit- und Lastschutz werden maximal 20 Rental-Datensätze pro Aktualisierung abgefragt.\n\n## Veröffentlichung
 
 Der Workflow .github/workflows/hashrent-release.yml baut ghcr.io/gonzo19844/hashrent:VERSION und :latest.
 
-- Manuell: GitHub → Actions → HASHRENT container release → Run workflow, Version 0.5.4.
-- Automatisch: Änderungen an HASHRENT auf main bauen das Image anhand der package.json-Version (0.5.4).
+- Manuell: GitHub → Actions → HASHRENT container release → Run workflow, Version 0.5.5.
+- Automatisch: Änderungen an HASHRENT auf main bauen das Image anhand der package.json-Version (0.5.5).
 - Das GHCR-Paket muss öffentlich sein, damit Umbrel es ohne GHCR-Anmeldung laden kann.
 
 ## Quellen
