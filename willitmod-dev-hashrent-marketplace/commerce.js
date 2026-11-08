@@ -441,7 +441,41 @@ function createCommerce(deps) {
     if (orderMatch && req.method === 'GET') {
       const order = orders().find(x => x.accessToken === orderMatch[1]);
       if (!order) return json(res, 404, { error: 'Bestellung nicht gefunden.' });
-      return json(res, 200, { orderId: order.id, offerName: order.offerName, targetPH: order.targetPH, hours: order.hours, priceEUR: order.priceEUR, paymentStatus: order.paymentStatus, status: order.status, paymentMode: order.paymentMode || PAYMENT_MODE, simulationNote: order.simulationNote || '', createdAt: order.createdAt });
+      const rentalIds = Array.isArray(order.privateRentalIds) ? [...new Set(order.privateRentalIds.map(String))].slice(0, 20) : [];
+      const miningRows = await Promise.all(rentalIds.map(async rentalId => {
+        try {
+          const [detailRaw, graphRaw] = await Promise.all([
+            mrrGet('/rental/' + encodeURIComponent(rentalId)),
+            mrrGet('/rental/' + encodeURIComponent(rentalId) + '/graph', 'hours=24&show_hashrate=true&ignore_zerohashrate=true').catch(() => null)
+          ]);
+          const detail = Array.isArray(detailRaw) ? detailRaw[0] : detailRaw;
+          const advertised = detail?.hashrate?.advertised || {};
+          const average = detail?.hashrate?.average || {};
+          return {
+            averagePH: hashToPH(average.hash, average.type),
+            latestPoints: graphPoints(graphRaw, average.type || advertised.type),
+            status: String(detail?.status || detail?.rental_status || 'active')
+          };
+        } catch (_) { return { averagePH: 0, latestPoints: [], status: 'Daten nicht verfügbar' }; }
+      }));
+      const pointMap = new Map();
+      for (const rental of miningRows) {
+        for (const point of rental.latestPoints) {
+          pointMap.set(point.time, (pointMap.get(point.time) || 0) + point.ph);
+        }
+      }
+      const points = [...pointMap.entries()].sort((a, b) => a[0] - b[0]).slice(-36).map(([time, ph]) => ({ time, ph }));
+      const latestPH = miningRows.reduce((sum, rental) => sum + (rental.latestPoints.length ? rental.latestPoints[rental.latestPoints.length - 1].ph : 0), 0);
+      const averagePH = miningRows.reduce((sum, rental) => sum + Number(rental.averagePH || 0), 0);
+      return json(res, 200, {
+        orderId: order.id, offerName: order.offerName, targetPH: order.targetPH, hours: order.hours,
+        currency: order.currency || 'btc', priceEUR: order.priceEUR, customerBTC: order.customerBTC || null,
+        paymentStatus: order.paymentStatus, status: order.status, paymentMode: order.paymentMode || PAYMENT_MODE,
+        simulationNote: order.simulationNote || '', createdAt: order.createdAt,
+        mining: { available: rentalIds.length > 0 && (points.length > 0 || averagePH > 0), rentalCount: rentalIds.length,
+          averagePH, latestPH, points, updatedAt: new Date().toISOString(),
+          rentalStatuses: miningRows.map(row => row.status) }
+      });
     }
     if (pathname === '/api/admin/orders' && req.method === 'GET') {
       return json(res, 200, { orders: orders().map(x => ({ ...x, accessToken: undefined, privateRigs: x.privateRigs?.map(r => ({ id: r.id, allocatedPH: r.allocatedPH, baseBTC: r.baseBTC })), privatePool: undefined, privatePoolEncrypted: undefined, privateRentalIds: x.privateRentalIds || [] })) });
