@@ -17,4 +17,4 @@ repo: https://github.com/Gonzo19844/umbrel-dev-community-store
 support: https://github.com/Gonzo19844/umbrel-dev-community-store/issues
 gallery: []
 releaseNotes: >-
-  0.5.4 entfernt RPI vollständig aus der Rig-Auswahl. MiningRigRentals-Angebote werden nach tatsächlichen Einkaufskosten sortiert; Hashrate und Verfügbarkeit werden weiterhin geprüft.
+  0.5.5 ergänzt ein geschütztes Live-Mining-Dashboard mit echten Hashrate- und 24-Stunden-Verlaufsdaten der für HASHRENT-Kunden gemieteten MiningRigRentals-Rigs. RPI bleibt aus der Rig-Auswahl entfernt.
