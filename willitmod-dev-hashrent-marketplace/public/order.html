@@ -1,1 +1,71 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HASHRENT Bestellung</title><link rel="stylesheet" href="/styles.css"></head><body><header class="topbar"><a class="brand" href="/"><span class="mark">H</span> HASHRENT</a></header><main class="settings-wrap"><section class="settings-card"><div class="eyebrow">BESTELLSTATUS</div><h1>Deine HASHRENT-Bestellung</h1><div id="order-status" class="notice">Bestellstatus wird geladen …</div><a class="primary" href="/">Zurück zum HASHRENT-Shop</a></section></main><script src="/order.js"></script></body></html>
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#11100d">
+  <title>HASHRENT – Mining-Auftrag</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="order-page">
+  <main class="order-shell">
+    <header class="order-head">
+      <a class="order-brand" href="/"><span class="order-mark">H</span> HASHRENT</a>
+      <div class="order-head-right"><span id="order-pool" class="pool-pill">● HASHRENT MINING</span><span id="order-duration-pill" class="duration-pill">Lade Laufzeit …</span></div>
+    </header>
+
+    <section class="order-overview">
+      <div class="order-metric"><span>ID</span><strong id="order-id">—</strong><small id="order-created">Wird geladen …</small></div>
+      <div class="order-metric"><span>GESAMT ENGAGIERT</span><strong id="order-total">—</strong><small id="order-total-sub">Bestellwert</small></div>
+      <div class="order-metric"><span>GEBUCHTE HASHRATE</span><strong id="order-hashrate">—</strong><small>SHA-256 ASICBoost</small></div>
+      <div class="order-metric"><span>MINING</span><strong><i class="btc-dot">₿</i> BTC</strong><small>Bitcoin</small></div>
+      <div class="order-metric"><span>DAUER</span><strong id="order-duration">—</strong><small>Bestellte Laufzeit</small></div>
+    </section>
+
+    <section class="order-status-strip">
+      <span class="strip-item"><i class="strip-dot done"></i> Bestellung</span>
+      <span class="strip-item"><i class="strip-dot" id="payment-dot"></i> Zahlung</span>
+      <span class="strip-item"><i class="strip-dot" id="rig-dot"></i> Rig-Zuweisung</span>
+      <span class="strip-item"><i class="strip-dot" id="mining-dot"></i> Mining</span>
+      <span id="order-state" class="state-label">Status wird geladen</span>
+    </section>
+
+    <section class="order-chart-card">
+      <div class="chart-heading">
+        <div><span class="chart-kicker">LIVE MINING</span><h1>Hashrate-Verlauf</h1><p id="chart-caption">Echte Messwerte deiner gemieteten MiningRigRentals-Rigs</p></div>
+        <div class="chart-live"><span class="live-pulse"></span><span id="chart-live-label">Warte auf Mining-Daten</span></div>
+      </div>
+      <div class="chart-legend">
+        <span><i class="legend-bar"></i> Gemessene Hashrate</span>
+        <span><i class="legend-line"></i> Soll-Hashrate</span>
+        <span class="chart-unit">PH/s</span>
+      </div>
+      <div id="hashrate-chart" class="hashrate-chart" role="img" aria-label="Hashrate-Verlauf; es werden ausschließlich echte Mining-Messwerte angezeigt">
+        <div class="chart-empty"><span class="empty-symbol">⌁</span><strong>Noch keine Mining-Messwerte</strong><p>Das Diagramm füllt sich automatisch, sobald HASHRENT echte Mining-Rigs zugewiesen hat und Messwerte von MiningRigRentals vorliegen.</p></div>
+      </div>
+      <div class="chart-axis"><span>24 h</span><span>18 h</span><span>12 h</span><span>6 h</span><span>Jetzt</span></div>
+      <div class="chart-footer"><span id="chart-average">Ø Hashrate: —</span><span id="chart-updated">Noch nicht aktualisiert</span></div>
+    </section>
+
+    <section class="order-bottom-grid">
+      <article class="order-info-card">
+        <span class="chart-kicker">AUFTRAGSDETAILS</span><h2>Deine Bestellung</h2>
+        <div class="order-info-row"><span>Angebot</span><strong id="detail-offer">—</strong></div>
+        <div class="order-info-row"><span>Mining-Algorithmus</span><strong>SHA-256 ASICBoost</strong></div>
+        <div class="order-info-row"><span>Zahlungsart</span><strong id="detail-payment">—</strong></div>
+        <div class="order-info-row"><span>Mining-Rigs</span><strong id="detail-rigs">Noch nicht zugewiesen</strong></div>
+        <div class="order-info-row"><span>Durchschnittliche Hashrate</span><strong id="detail-average">—</strong></div>
+      </article>
+      <article class="order-info-card progress-card">
+        <span class="chart-kicker">LAUFZEIT</span><h2>Auftragsfortschritt</h2>
+        <div class="progress-track"><span id="runtime-progress"></span></div>
+        <div class="progress-labels"><span>Gestartet</span><strong id="runtime-percent">0 %</strong><span>Abgeschlossen</span></div>
+        <p id="runtime-note">Die Laufzeit beginnt erst, wenn das Mining tatsächlich gestartet wurde.</p>
+        <a class="order-back-link" href="/">HASHRENT-Shop öffnen ↗</a>
+      </article>
+    </section>
+    <footer class="order-footer"><span>HASHRENT · Private Mining-Ansicht</span><span>Diese Seite ist über deinen persönlichen Bestelllink erreichbar.</span></footer>
+  </main>
+  <script src="/order.js"></script>
+</body>
+</html>
