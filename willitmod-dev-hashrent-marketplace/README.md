@@ -1,6 +1,8 @@
 # HASHRENT – Umbrel Community App
 
-HASHRENT 0.5.5 entfernt RPI vollständig aus der Auswahl und Bewertung von MiningRigRentals-Angeboten. Die App stellt einen eigenen HASHRENT-Shop mit administrierbaren Angeboten und NOWPayments-Checkout bereit. MiningRigRentals wird ausschließlich serverseitig als Beschaffungsanbieter verwendet.
+HASHRENT 0.5.6 läuft vorübergehend im fest aktivierten Zahlungs-Testmodus. Checkout-Bestellungen werden als `payment_simulated` gespeichert. Es werden keine NOWPayments-Rechnungen erstellt, keine echten Zahlungen angenommen und keine MRR-Rentals provisioniert. Die NOWPayments-IPN-Route ist währenddessen gesperrt. Die Live-MRR-Angebotskalkulation bleibt aktiv, damit Checkout und Bestellanlage realitätsnah getestet werden können.
+
+HASHRENT 0.5.6 entfernt RPI vollständig aus der Auswahl und Bewertung von MiningRigRentals-Angeboten. Die App stellt einen eigenen HASHRENT-Shop mit administrierbaren Angeboten und Checkout im temporären Zahlungs-Testmodus bereit; NOWPayments bleibt für die spätere Aktivierung vorbereitet. MiningRigRentals wird ausschließlich serverseitig als Beschaffungsanbieter verwendet.
 
 ## Öffentlicher Shop
 
@@ -16,10 +18,10 @@ Der Kundenpreis wird serverseitig aus den live verfügbaren MRR-Einkaufskosten e
 
 ## Zahlungsablauf
 
-- NOWPayments-Rechnung in EUR; Kunden wählen BTC, LTC, DOGE oder BCH.
-- IPN-Callbacks werden anhand des NOWPayments-Signatur-Headers und HMAC-SHA512 geprüft.
-- Nur eine gültig signierte Meldung mit Status finished löst die Beschaffung aus.
-- Wiederholte Callbacks lösen keine doppelte Provisionierung aus.
+- Aktuell: Testzahlung ohne Rechnung, Abbuchung oder MRR-Miete. Kunden können BTC, LTC, DOGE oder BCH als gewünschte Testwährung auswählen.
+- Bestellungen erhalten `paymentStatus: simulated` und `status: payment_simulated`.
+- NOWPayments-Rechnungserstellung und IPN-Verarbeitung sind im Testmodus deaktiviert.
+- Für die spätere Live-Schaltung muss der Zahlungsmodus nach Abschluss der Tests bewusst auf live umgestellt und vollständig geprüft werden.
 - Bei einer teilweise fehlgeschlagenen MRR-Beschaffung wird die Bestellung als provisioning_attention markiert und muss administrativ geprüft werden.
 
 Wichtig: Für echte Zahlungen muss die Umbrel-App über eine öffentlich erreichbare HTTPS-Adresse verfügen. Diese Adresse wird im Adminbereich als Callback-Basisadresse eingetragen und muss auf die HASHRENT-App zeigen. NOWPayments muss diese URL aus dem Internet erreichen können.
@@ -48,7 +50,7 @@ Zugangsdaten werden gemeinsam mit dem bestehenden MRR-Schlüsselmaterial AES-256
 Der Workflow .github/workflows/hashrent-release.yml baut ghcr.io/gonzo19844/hashrent:VERSION und :latest.
 
 - Manuell: GitHub → Actions → HASHRENT container release → Run workflow, Version 0.5.5.
-- Automatisch: Änderungen an HASHRENT auf main bauen das Image anhand der package.json-Version (0.5.5).
+- Automatisch: Änderungen an HASHRENT auf main bauen das Image anhand der package.json-Version (0.5.6).
 - Das GHCR-Paket muss öffentlich sein, damit Umbrel es ohne GHCR-Anmeldung laden kann.
 
 ## Quellen
