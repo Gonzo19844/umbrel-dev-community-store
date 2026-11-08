@@ -4,6 +4,8 @@ const crypto = require('crypto');
 
 function createCommerce(deps) {
   const { DATA_DIR, json, readJson, sameOrigin, mrrGet, mrrPut, getMarket, makeQuote, saveCredentials, getCredentials } = deps;
+  // Temporary safe test mode: never create a real NOWPayments invoice or MRR rental.
+  const PAYMENT_MODE = 'simulation';
   const adminFile = path.join(DATA_DIR, 'admin.json');
   const offersFile = path.join(DATA_DIR, 'offers.json');
   const ordersFile = path.join(DATA_DIR, 'orders.json');
@@ -181,7 +183,7 @@ function createCommerce(deps) {
     if (['/api/market','/api/quote','/api/account','/api/rentals','/api/settings'].includes(pathname)) return json(res, 404, { error: 'Diese internen MRR-Endpunkte sind nicht öffentlich verfügbar.' });
     if (pathname === '/api/admin/status' && req.method === 'GET') {
       const cfg = getCredentials();
-      return json(res, 200, { setupRequired: !admin(), authenticated: isAdmin(req), nowPaymentsConfigured: Boolean(cfg.nowPaymentsKey && cfg.nowPaymentsIpnSecret), mrrConfigured: Boolean(cfg.key && cfg.secret) });
+      return json(res, 200, { setupRequired: !admin(), authenticated: isAdmin(req), nowPaymentsConfigured: Boolean(cfg.nowPaymentsKey && cfg.nowPaymentsIpnSecret), paymentMode: PAYMENT_MODE, mrrConfigured: Boolean(cfg.key && cfg.secret) });
     }
     if (pathname === '/api/admin/setup' && req.method === 'POST') {
       if (!sameOrigin(req)) return json(res, 403, { error: 'Ungültige Herkunft der Anfrage.' });
@@ -283,7 +285,7 @@ function createCommerce(deps) {
     }
     if (pathname === '/api/admin/config' && req.method === 'GET') {
       const cfg = getCredentials();
-      return json(res, 200, { mrrConfigured: Boolean(cfg.key && cfg.secret), nowPaymentsConfigured: Boolean(cfg.nowPaymentsKey && cfg.nowPaymentsIpnSecret), defaultProfileId: cfg.defaultProfileId || '', publicBaseUrl: cfg.publicBaseUrl || '' });
+      return json(res, 200, { mrrConfigured: Boolean(cfg.key && cfg.secret), nowPaymentsConfigured: Boolean(cfg.nowPaymentsKey && cfg.nowPaymentsIpnSecret), paymentMode: PAYMENT_MODE, defaultProfileId: cfg.defaultProfileId || '', publicBaseUrl: cfg.publicBaseUrl || '' });
     }
     if (pathname === '/api/admin/config' && req.method === 'POST') {
       if (!sameOrigin(req)) return json(res, 403, { error: 'Ungültige Herkunft der Anfrage.' });
@@ -384,31 +386,41 @@ function createCommerce(deps) {
         const quote = makeQuote(await getMarket(true), targetPH, hours);
         if (!quote.complete) return json(res, 409, { error: 'Aktuell ist nicht genug passende SHA-256-ASICBoost-Hashrate verfügbar.' });
         const customerBTC = Number(quote.baseBTC) * 1.05;
-        const estimate = await nowRequest('/estimate?amount=' + encodeURIComponent(customerBTC) + '&currency_from=btc&currency_to=eur', 'GET', null, cfg.nowPaymentsKey);
-        const priceEUR = Number(estimate.estimated_amount);
-        if (!(priceEUR > 0)) return json(res, 502, { error: 'NOWPayments konnte den aktuellen BTC/EUR-Preis nicht ermitteln.' });
         const id = draftOrder?.id || ('HR-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase());
         const accessToken = draftOrder?.accessToken || token();
-        const invoice = await nowRequest('/invoice', 'POST', {
-          price_amount: Number(priceEUR.toFixed(2)), price_currency: 'eur', pay_currency: currency,
-          ipn_callback_url: cfg.publicBaseUrl + '/api/payments/nowpayments/ipn',
-          order_id: id, order_description: offer.name + ' · ' + targetPH + ' PH/s · ' + hours + ' Stunden',
-          success_url: cfg.publicBaseUrl + '/order/' + accessToken,
-          cancel_url: cfg.publicBaseUrl + '/order/' + accessToken
-        }, cfg.nowPaymentsKey);
-        if (!invoice.invoice_url || !invoice.id) throw new Error('NOWPayments hat keine gültige Rechnungs-URL zurückgegeben.');
         const rows = orders();
-        const completedOrder = { id, accessToken, offerId: offer.id, offerName: offer.name, targetPH, hours, currency, privatePoolEncrypted: sealPool({ host: poolHost, port: poolPort, user: poolUser, pass: poolPass }), priceEUR: Number(priceEUR.toFixed(2)), customerBTC, baseBTC: Number(quote.baseBTC), markupBTC: Number(customerBTC - Number(quote.baseBTC)), privateRigs: quote.rigs, paymentInvoiceId: String(invoice.id), paymentStatus: 'waiting', status: 'pending_payment', createdAt: draftOrder?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+        const simulated = PAYMENT_MODE === 'simulation';
+        const completedOrder = {
+          id, accessToken, offerId: offer.id, offerName: offer.name, targetPH, hours, currency,
+          privatePoolEncrypted: sealPool({ host: poolHost, port: poolPort, user: poolUser, pass: poolPass }),
+          priceEUR: null, customerBTC, baseBTC: Number(quote.baseBTC),
+          markupBTC: Number(customerBTC - Number(quote.baseBTC)), privateRigs: quote.rigs,
+          paymentInvoiceId: null, paymentStatus: simulated ? 'simulated' : 'waiting',
+          status: simulated ? 'payment_simulated' : 'pending_payment',
+          paymentMode: PAYMENT_MODE, createdAt: draftOrder?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString()
+        };
+        if (simulated) {
+          completedOrder.simulatedAt = new Date().toISOString();
+          completedOrder.simulationNote = 'Testzahlung – keine echte Zahlung und keine MRR-Miete ausgelöst.';
+        }
         if (draftOrder) {
           const draftIndex = rows.findIndex(x => x.accessToken === accessToken);
+          if (draftIndex < 0) return json(res, 404, { error: 'Persönlicher Checkout-Link nicht mehr verfügbar.' });
           rows[draftIndex] = completedOrder;
         } else rows.push(completedOrder);
         saveOrders(rows);
-        return json(res, 201, { ok: true, orderId: id, statusToken: accessToken, invoiceUrl: invoice.invoice_url, priceEUR: Number(priceEUR.toFixed(2)), currency });
+        return json(res, 201, {
+          ok: true, orderId: id, statusToken: accessToken, invoiceUrl: null,
+          priceEUR: null, currency, simulation: simulated,
+          message: simulated
+            ? 'Testzahlung simuliert. Es wurde kein Geld eingezogen und keine MRR-Miete gestartet.'
+            : 'Rechnung erstellt.'
+        });
       } catch (error) { return json(res, 502, { error: error.message || 'Checkout konnte nicht erstellt werden.' }); }
     }
     if (pathname === '/api/payments/nowpayments/ipn' && req.method === 'POST') {
       try {
+        if (PAYMENT_MODE === 'simulation') return json(res, 409, { error: 'NOWPayments-IPN ist im HASHRENT-Testmodus deaktiviert.' });
         const body = await readJson(req);
         const cfg = getCredentials();
         if (!verifyIpn(body, req.headers['x-nowpayments-sig'], cfg.nowPaymentsIpnSecret)) return json(res, 401, { error: 'Ungültige Zahlungs-Signatur.' });
@@ -429,7 +441,7 @@ function createCommerce(deps) {
     if (orderMatch && req.method === 'GET') {
       const order = orders().find(x => x.accessToken === orderMatch[1]);
       if (!order) return json(res, 404, { error: 'Bestellung nicht gefunden.' });
-      return json(res, 200, { orderId: order.id, offerName: order.offerName, targetPH: order.targetPH, hours: order.hours, priceEUR: order.priceEUR, paymentStatus: order.paymentStatus, status: order.status, createdAt: order.createdAt });
+      return json(res, 200, { orderId: order.id, offerName: order.offerName, targetPH: order.targetPH, hours: order.hours, priceEUR: order.priceEUR, paymentStatus: order.paymentStatus, status: order.status, paymentMode: order.paymentMode || PAYMENT_MODE, simulationNote: order.simulationNote || '', createdAt: order.createdAt });
     }
     if (pathname === '/api/admin/orders' && req.method === 'GET') {
       return json(res, 200, { orders: orders().map(x => ({ ...x, accessToken: undefined, privateRigs: x.privateRigs?.map(r => ({ id: r.id, allocatedPH: r.allocatedPH, baseBTC: r.baseBTC })), privatePool: undefined, privatePoolEncrypted: undefined, privateRentalIds: x.privateRentalIds || [] })) });
