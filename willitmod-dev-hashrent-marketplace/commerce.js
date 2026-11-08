@@ -277,6 +277,29 @@ function createCommerce(deps) {
       writeFile(offersFile, offers().filter(x => x.id !== id));
       return json(res, 200, { ok: true });
     }
+    const draftMatch = pathname.match(/^\/api\/orders\/draft\/([a-f0-9]{48})$/);
+    if (draftMatch && req.method === 'GET') {
+      const draft = orders().find(x => x.accessToken === draftMatch[1] && x.status === 'draft');
+      if (!draft) return json(res, 404, { error: 'Dieser persönliche Checkout-Link ist ungültig oder wurde bereits verwendet.' });
+      const offer = offers().find(x => x.id === draft.offerId && x.enabled === true);
+      if (!offer) return json(res, 404, { error: 'Dieses Angebot ist nicht mehr verfügbar.' });
+      return json(res, 200, { orderId: draft.id, offerId: offer.id, offerName: offer.name, minPH: offer.minPH, maxPH: offer.maxPH, minHours: offer.minHours, maxHours: offer.maxHours });
+    }
+    if (pathname === '/api/orders/draft' && req.method === 'POST') {
+      if (!sameOrigin(req)) return json(res, 403, { error: 'Ungültige Herkunft der Anfrage.' });
+      try {
+        const body = await readJson(req);
+        const draftOrder = body.checkoutToken ? orders().find(x => x.accessToken === String(body.checkoutToken) && x.status === 'draft') : null;
+        const offer = offers().find(x => x.id === String(body.offerId || draftOrder?.offerId) && x.enabled === true);
+        if (!offer) return json(res, 404, { error: 'Dieses HASHRENT-Angebot ist nicht verfügbar oder der Checkout-Link ist ungültig.' });
+        const accessToken = token();
+        const id = 'HR-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+        const rows = orders();
+        rows.push({ id, accessToken, offerId: offer.id, offerName: offer.name, status: 'draft', paymentStatus: 'not_created', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+        saveOrders(rows);
+        return json(res, 201, { ok: true, orderId: id, checkoutUrl: '/checkout/' + accessToken });
+      } catch (error) { return json(res, 400, { error: error.message || 'Persönlicher Checkout konnte nicht erstellt werden.' }); }
+    }
     if (pathname === '/api/orders' && req.method === 'POST') {
       if (!sameOrigin(req)) return json(res, 403, { error: 'Ungültige Herkunft der Anfrage.' });
       try {
@@ -298,8 +321,8 @@ function createCommerce(deps) {
         const estimate = await nowRequest('/estimate?amount=' + encodeURIComponent(customerBTC) + '&currency_from=btc&currency_to=eur', 'GET', null, cfg.nowPaymentsKey);
         const priceEUR = Number(estimate.estimated_amount);
         if (!(priceEUR > 0)) return json(res, 502, { error: 'NOWPayments konnte den aktuellen BTC/EUR-Preis nicht ermitteln.' });
-        const id = 'HR-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
-        const accessToken = token();
+        const id = draftOrder?.id || ('HR-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase());
+        const accessToken = draftOrder?.accessToken || token();
         const invoice = await nowRequest('/invoice', 'POST', {
           price_amount: Number(priceEUR.toFixed(2)), price_currency: 'eur', pay_currency: currency,
           ipn_callback_url: cfg.publicBaseUrl + '/api/payments/nowpayments/ipn',
@@ -309,7 +332,11 @@ function createCommerce(deps) {
         }, cfg.nowPaymentsKey);
         if (!invoice.invoice_url || !invoice.id) throw new Error('NOWPayments hat keine gültige Rechnungs-URL zurückgegeben.');
         const rows = orders();
-        rows.push({ id, accessToken, offerName: offer.name, targetPH, hours, currency, privatePoolEncrypted: sealPool({ host: poolHost, port: poolPort, user: poolUser, pass: poolPass }), priceEUR: Number(priceEUR.toFixed(2)), customerBTC, baseBTC: Number(quote.baseBTC), markupBTC: Number(customerBTC - Number(quote.baseBTC)), privateRigs: quote.rigs, paymentInvoiceId: String(invoice.id), paymentStatus: 'waiting', status: 'pending_payment', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+        const completedOrder = { id, accessToken, offerId: offer.id, offerName: offer.name, targetPH, hours, currency, privatePoolEncrypted: sealPool({ host: poolHost, port: poolPort, user: poolUser, pass: poolPass }), priceEUR: Number(priceEUR.toFixed(2)), customerBTC, baseBTC: Number(quote.baseBTC), markupBTC: Number(customerBTC - Number(quote.baseBTC)), privateRigs: quote.rigs, paymentInvoiceId: String(invoice.id), paymentStatus: 'waiting', status: 'pending_payment', createdAt: draftOrder?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+        if (draftOrder) {
+          const draftIndex = rows.findIndex(x => x.accessToken === accessToken);
+          rows[draftIndex] = completedOrder;
+        } else rows.push(completedOrder);
         saveOrders(rows);
         return json(res, 201, { ok: true, orderId: id, statusToken: accessToken, invoiceUrl: invoice.invoice_url, priceEUR: Number(priceEUR.toFixed(2)), currency });
       } catch (error) { return json(res, 502, { error: error.message || 'Checkout konnte nicht erstellt werden.' }); }
