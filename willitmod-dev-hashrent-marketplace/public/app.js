@@ -63,7 +63,7 @@ async function loadOffers() {
   }
 }
 
-function selectOffer(id) {
+async function selectOffer(id) {
   $('offer-id').value = id;
   const offer = offers.find((item) => item.id === id);
   if (offer) {
@@ -74,7 +74,21 @@ function selectOffer(id) {
     $('hours').max = offer.maxHours;
     $('hours').value = Math.max(offer.minHours, 24);
   }
-  $('checkout').scrollIntoView({ behavior: 'smooth' });
+  const buttons = document.querySelectorAll('.choose-offer');
+  buttons.forEach((button) => { button.disabled = true; });
+  try {
+    const response = await fetch('/api/orders/draft', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ offerId: id }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Persönlicher Checkout konnte nicht erstellt werden.');
+    window.location.assign(data.checkoutUrl);
+  } catch (error) {
+    msg('offers-message', error.message, 'warning');
+    buttons.forEach((button) => { button.disabled = false; });
+  }
 }
 
 $('offers').addEventListener('click', (event) => {
