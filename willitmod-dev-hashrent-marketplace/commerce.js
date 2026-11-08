@@ -216,6 +216,71 @@ function createCommerce(deps) {
     if (pathname.startsWith('/api/admin/') && !['/api/admin/status','/api/admin/setup','/api/admin/login','/api/admin/logout'].includes(pathname)) {
       if (!isAdmin(req)) return json(res, 401, { error: 'Admin-Anmeldung erforderlich.' });
     }
+  function hashToPH(hash, unit) {
+    const factors = { h: 1e-15, kh: 1e-12, mh: 1e-9, gh: 1e-6, th: 1e-3, ph: 1, eh: 1000 };
+    return Number(hash || 0) * (factors[String(unit || '').toLowerCase()] || 0);
+  }
+  function graphPoints(graph, fallbackUnit) {
+    const raw = graph?.chartdata?.average || graph?.chartdata?.bars || '';
+    const unit = graph?.hashtype || fallbackUnit || '';
+    return String(raw).match(/\\[\\s*\\d+\\s*,\\s*[-+]?\\d*\\.?\\d+(?:e[-+]?\\d+)?\\s*\\]/gi)?.slice(-36).map(item => {
+      const pair = item.replace(/[\\[\\]\\s]/g, '').split(',');
+      return { time: Number(pair[0]), ph: hashToPH(Number(pair[1]), unit) };
+    }).filter(point => Number.isFinite(point.ph)) || [];
+  }
+  if (pathname === '/api/admin/mining-dashboard' && req.method === 'GET') {
+      try {
+        const rows = orders();
+        const activeOrders = rows.filter(order => ['active','provisioning','provisioning_attention'].includes(order.status) && Array.isArray(order.privateRentalIds) && order.privateRentalIds.length);
+        const allIds = activeOrders.flatMap(order => order.privateRentalIds.map(String));
+        const limitedIds = [...new Set(allIds)].slice(0, 20);
+        const rentalData = await Promise.all(limitedIds.map(async rentalId => {
+          const parent = activeOrders.find(order => order.privateRentalIds.map(String).includes(rentalId));
+          const index = parent ? parent.privateRentalIds.map(String).indexOf(rentalId) : -1;
+          const sourceRig = parent?.privateRigs?.[index] || {};
+          try {
+            const [detailRaw, graphRaw] = await Promise.all([
+              mrrGet('/rental/' + encodeURIComponent(rentalId)),
+              mrrGet('/rental/' + encodeURIComponent(rentalId) + '/graph', 'hours=24&show_hashrate=true&ignore_zerohashrate=true').catch(() => null)
+            ]);
+            const detail = Array.isArray(detailRaw) ? detailRaw[0] : detailRaw;
+            const advertised = detail?.hashrate?.advertised || {};
+            const average = detail?.hashrate?.average || {};
+            const points = graphPoints(graphRaw, average.type || advertised.type);
+            const latest = points.length ? points[points.length - 1].ph : null;
+            return {
+              rentalId, orderId: parent?.id || '', offerName: parent?.offerName || 'HASHRENT',
+              orderStatus: parent?.status || 'unknown', targetPH: Number(parent?.targetPH || 0),
+              rigId: String(detail?.rig || detail?.rigid || sourceRig.id || ''),
+              rigName: String(detail?.rig_name || detail?.name || sourceRig.name || ('MRR-Rig #' + (sourceRig.id || '?'))),
+              status: String(detail?.status || detail?.rental_status || 'active'),
+              advertisedPH: hashToPH(advertised.hash, advertised.type),
+              averagePH: hashToPH(average.hash, average.type),
+              averagePercent: Number(average.percent || 0),
+              latestPH: latest,
+              points,
+              start: detail?.start || detail?.time_start || null,
+              end: detail?.end || detail?.time_end || null,
+              updatedAt: new Date().toISOString()
+            };
+          } catch (error) {
+            return { rentalId, orderId: parent?.id || '', offerName: parent?.offerName || 'HASHRENT',
+              orderStatus: parent?.status || 'unknown', targetPH: Number(parent?.targetPH || 0),
+              rigId: String(sourceRig.id || ''), rigName: String(sourceRig.name || ('MRR-Rig #' + (sourceRig.id || '?'))),
+              status: 'Daten nicht verfügbar', error: error.message };
+          }
+        }));
+        const totalAveragePH = rentalData.reduce((sum, item) => sum + Number(item.averagePH || 0), 0);
+        const totalAdvertisedPH = rentalData.reduce((sum, item) => sum + Number(item.advertisedPH || 0), 0);
+        const activeCount = rentalData.filter(item => !/finish|complete|ended/i.test(item.status)).length;
+        return json(res, 200, {
+          updatedAt: new Date().toISOString(), totalOrders: activeOrders.length,
+          totalRentals: allIds.length, shownRentals: rentalData.length,
+          omittedRentals: Math.max(0, allIds.length - rentalData.length),
+          activeRentals: activeCount, totalAveragePH, totalAdvertisedPH, rentals: rentalData
+        });
+      } catch (error) { return json(res, 502, { error: error.message || 'Mining-Dashboard konnte nicht geladen werden.' }); }
+    }
     if (pathname === '/api/admin/config' && req.method === 'GET') {
       const cfg = getCredentials();
       return json(res, 200, { mrrConfigured: Boolean(cfg.key && cfg.secret), nowPaymentsConfigured: Boolean(cfg.nowPaymentsKey && cfg.nowPaymentsIpnSecret), defaultProfileId: cfg.defaultProfileId || '', publicBaseUrl: cfg.publicBaseUrl || '' });
