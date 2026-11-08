@@ -346,7 +346,7 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  const requested = pathname === '/' ? 'index.html' : (pathname === '/admin' || pathname === '/settings' ? 'admin.html' : (pathname.startsWith('/order/') ? 'order.html' : pathname.replace(/^\/+/, '')));
+  const requested = pathname === '/' ? 'index.html' : (pathname === '/admin' || pathname === '/settings' ? 'admin.html' : (pathname.startsWith('/order/') ? 'order.html' : (pathname.startsWith('/checkout/') ? 'checkout.html' : pathname.replace(/^\/+/, ''))));
   const file = path.resolve(PUBLIC_DIR, requested);
   if (!file.startsWith(PUBLIC_DIR + path.sep)) {
     res.writeHead(403); return res.end('Forbidden');
@@ -357,4 +357,4 @@ const server = http.createServer(async (req, res) => {
     res.end(data);
   });
 });
-server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.5.2 listening on ' + PORT));
+server.listen(PORT, '0.0.0.0', () => console.log('HASHRENT 0.5.3 listening on ' + PORT));
