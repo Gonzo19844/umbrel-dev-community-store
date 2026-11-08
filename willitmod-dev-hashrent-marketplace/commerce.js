@@ -233,7 +233,7 @@ function createCommerce(deps) {
   if (pathname === '/api/admin/mining-dashboard' && req.method === 'GET') {
       try {
         const rows = orders();
-        const activeOrders = rows.filter(order => ['active','provisioning','provisioning_attention'].includes(order.status) && Array.isArray(order.privateRentalIds) && order.privateRentalIds.length);
+        const activeOrders = rows.filter(order => ['active','provisioning','provisioning_attention','payment_simulated'].includes(order.status) && Array.isArray(order.privateRentalIds) && order.privateRentalIds.length);
         const allIds = activeOrders.flatMap(order => order.privateRentalIds.map(String));
         const limitedIds = [...new Set(allIds)].slice(0, 20);
         const rentalData = await Promise.all(limitedIds.map(async rentalId => {
@@ -454,6 +454,7 @@ function createCommerce(deps) {
           return {
             averagePH: hashToPH(average.hash, average.type),
             latestPoints: graphPoints(graphRaw, average.type || advertised.type),
+            startAt: detail?.start || detail?.time_start || null,
             status: String(detail?.status || detail?.rental_status || 'active')
           };
         } catch (_) { return { averagePH: 0, latestPoints: [], status: 'Daten nicht verfügbar' }; }
@@ -478,6 +479,30 @@ function createCommerce(deps) {
           averagePH, latestPH, points, startedAt, updatedAt: new Date().toISOString(),
           rentalStatuses: miningRows.map(row => row.status) }
       });
+    }
+    const attachRentalMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)\/rentals$/);
+    if (attachRentalMatch && req.method === 'POST') {
+      if (!sameOrigin(req)) return json(res, 403, { error: 'Ungültige Herkunft der Anfrage.' });
+      try {
+        const orderId = decodeURIComponent(attachRentalMatch[1]);
+        const body = await readJson(req);
+        const rentalId = String(body.rentalId || '').trim();
+        if (!/^[0-9]{1,20}$/.test(rentalId)) return json(res, 400, { error: 'Bitte eine gültige numerische MRR-Rental-ID angeben.' });
+        const rows = orders();
+        const order = rows.find(item => item.id === orderId);
+        if (!order) return json(res, 404, { error: 'HASHRENT-Auftrag nicht gefunden.' });
+        const cfg = getCredentials();
+        if (!cfg.key || !cfg.secret) return json(res, 503, { error: 'MRR-API-Zugangsdaten sind nicht konfiguriert.' });
+        const detailRaw = await mrrGet('/rental/' + encodeURIComponent(rentalId));
+        const detail = Array.isArray(detailRaw) ? detailRaw[0] : detailRaw;
+        if (!detail || (!detail.id && !detail.rig && !detail.rigid)) return json(res, 502, { error: 'MRR hat keine gültigen Rental-Details geliefert.' });
+        const ids = Array.isArray(order.privateRentalIds) ? order.privateRentalIds.map(String) : [];
+        if (!ids.includes(rentalId)) ids.push(rentalId);
+        order.privateRentalIds = ids.slice(0, 20);
+        order.updatedAt = new Date().toISOString();
+        saveOrders(rows);
+        return json(res, 200, { ok: true, rentalId, message: 'Bestehender MRR-Rental wurde zugeordnet. Es wurde keine neue Miete gestartet.' });
+      } catch (error) { return json(res, 502, { error: error.message || 'MRR-Rental konnte nicht zugeordnet werden.' }); }
     }
     if (pathname === '/api/admin/orders' && req.method === 'GET') {
       return json(res, 200, { orders: orders().map(x => ({ ...x, accessToken: undefined, privateRigs: x.privateRigs?.map(r => ({ id: r.id, allocatedPH: r.allocatedPH, baseBTC: r.baseBTC })), privatePool: undefined, privatePoolEncrypted: undefined, privateRentalIds: x.privateRentalIds || [] })) });
