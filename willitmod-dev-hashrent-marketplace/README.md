@@ -1,5 +1,7 @@
 # HASHRENT – Umbrel Community App
 
+HASHRENT 0.5.7 ergänzt eine private, screenshot-inspirierte Mining-Bestellansicht unter dem persönlichen Bestelllink. Sie zeigt Bestell-ID, gebuchte Hashrate, Laufzeit, Zahlungs-/Bereitstellungsstatus und – sobald echte MRR-Rentals bestehen – deren reale Hashrate-Messwerte und Verlauf. Ohne bestätigte Rentals werden keine Beispiel- oder simulierten Mining-Werte angezeigt.
+
 HASHRENT 0.5.6 läuft vorübergehend im fest aktivierten Zahlungs-Testmodus. Checkout-Bestellungen werden als `payment_simulated` gespeichert. Es werden keine NOWPayments-Rechnungen erstellt, keine echten Zahlungen angenommen und keine MRR-Rentals provisioniert. Die NOWPayments-IPN-Route ist währenddessen gesperrt. Die Live-MRR-Angebotskalkulation bleibt aktiv, damit Checkout und Bestellanlage realitätsnah getestet werden können.
 
 HASHRENT 0.5.6 entfernt RPI vollständig aus der Auswahl und Bewertung von MiningRigRentals-Angeboten. Die App stellt einen eigenen HASHRENT-Shop mit administrierbaren Angeboten und Checkout im temporären Zahlungs-Testmodus bereit; NOWPayments bleibt für die spätere Aktivierung vorbereitet. MiningRigRentals wird ausschließlich serverseitig als Beschaffungsanbieter verwendet.
